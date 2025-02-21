@@ -55,13 +55,13 @@ jobs:
         dotnet-version: ${{env.DOTNET_CORE_VERSION}}
 
     - name: Restore
-      run: dotnet restore ${{ secrets.WEBAPI_PROJECT_NAME }}
+      run: dotnet restore MijnWebApi.sln
       
     - name: Build
-      run: dotnet build ${{ secrets.WEBAPI_PROJECT_NAME }} --no-restore
+      run: dotnet build MijnWebApi.sln --no-restore
     
     - name: Test
-      run: dotnet test ${{ secrets.WEBAPI_PROJECT_NAME }} --no-build --verbosity normal
+      run: dotnet test MijnWebApi.sln --no-build --verbosity normal
     
     - name: Publish
       run: dotnet publish ${{ secrets.WEBAPI_PROJECT_NAME }} --output ${{env.PUBLISH_DIRECTORY}} --configuration Release 
