@@ -1,4 +1,4 @@
-var builder = WebApplication.CreateBuilder(args);
+﻿var builder = WebApplication.CreateBuilder(args);
 
 var SQLConnectionString = builder.Configuration["SqlConnectionString"];
 
@@ -12,10 +12,11 @@ builder.Services.AddOpenApi();
 var app = builder.Build();
 
 // SQLConnectionString
-var sqlConnectionString = builder.COnfiguration.GetValue<string>("SqlConnectionString");
-var sqlCOnnectionStringFOund = !string.IsNullOrWhiteSpace(sqlConnectionString);
+var sqlConnectionString = builder.Configuration.GetValue<string>("SqlConnectionString2");
+bool sqlConnectionStringFound = !string.IsNullOrWhiteSpace(sqlConnectionString);
 
 
+app.MapGet("/", () => $"The API is up 🚀. Connection string found: {(sqlConnectionStringFound ? "✅" : "❌")}");
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

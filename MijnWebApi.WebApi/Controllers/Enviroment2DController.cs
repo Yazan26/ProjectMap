@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using MijnWebApi.WebApi.Classes;
 
-[ApiController]
+/*[ApiController]
 [Route("[controller]")]
 
-public class Enviroment2DController : ControllerBase
+ public class Enviroment2DController : ControllerBase
 {
 
     [HttpPost(Name = "AddEnviroment")]
@@ -17,4 +17,4 @@ public class Enviroment2DController : ControllerBase
 
         return CreatedAtRoute("GetEnviromentById", new { enviromentId = createdEnviroment.ID }, enviroment);
     }
-}
+}*/ 
