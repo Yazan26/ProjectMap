@@ -1,6 +1,6 @@
 ﻿var builder = WebApplication.CreateBuilder(args);
 
-var SQLConnectionString = builder.Configuration["SqlConnectionString2"];
+var SQLConnectionString = builder.Configuration["SqlConnectionString"];
 // aaa
 
 // Add services to the container.
@@ -12,7 +12,7 @@ builder.Services.AddOpenApi();
 var app = builder.Build();
 
 // SQLConnectionString
-var sqlConnectionString = builder.Configuration.GetValue<string>("SqlConnectionString2");
+var sqlConnectionString = builder.Configuration.GetValue<string>("SqlConnectionString");
 bool sqlConnectionStringFound = !string.IsNullOrWhiteSpace(sqlConnectionString);
 
 
