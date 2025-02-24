@@ -4,7 +4,7 @@ using MijnWebApi.WebApi.Classes;
 namespace MijnWebApi.WebApi.Controllers;
 
 [ApiController]
-[Route("[controller]")]
+[Route("weather")]
 public class WeatherForecastController : ControllerBase
   
 {
