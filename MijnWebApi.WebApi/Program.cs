@@ -1,7 +1,7 @@
 ﻿var builder = WebApplication.CreateBuilder(args);
 
 var SQLConnectionString = builder.Configuration["SqlConnectionString"];
-
+// aaa
 
 // Add services to the container.
 
