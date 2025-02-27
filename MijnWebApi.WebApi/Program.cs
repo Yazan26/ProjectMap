@@ -1,9 +1,18 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Identity.Client;
+using MijnWebApi.WebApi.Classes;
+
+
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Adding the HTTP Context accessor to be injected. This is needed by the AspNetIdentityUserRepository
+// to resolve the current user.
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddTransient<IAuthenticationService, AspNetIdentityAuthenticationService>();
 
 builder.Services.AddAuthorization();
 builder.Services
