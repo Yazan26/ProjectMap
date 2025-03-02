@@ -1,11 +1,10 @@
-﻿using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Identity.Client;
 using MijnWebApi.WebApi.Classes;
-
-
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.OpenApi.Models; // Ensure this using directive is present
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,18 +15,25 @@ builder.Services.AddTransient<IAuthenticationService, AspNetIdentityAuthenticati
 
 builder.Services.AddAuthorization();
 builder.Services
-    .AddIdentityApiEndpoints<IdentityUser>()
+    .AddIdentityApiEndpoints<IdentityUser>(options =>
+    {
+        options.User.RequireUniqueEmail = true;
+        options.Password.RequiredLength = 8;
+        options.Password.RequireNonAlphanumeric = false;
+        options.Password.RequireUppercase = false;
+        options.Password.RequireLowercase = false;
+        options.Password.RequireDigit = false;
+    })
+    .AddRoles<IdentityRole>()
     .AddDapperStores(options =>
     {
-        options.ConnectionString = builder.Configuration["SqlConnectionString"];
+        options.ConnectionString = builder.Configuration.GetConnectionString("DapperIdentity");
     });
-
-var SQLConnectionString = builder.Configuration["SqlConnectionString"];
 
 // Add services to the container.
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
@@ -35,32 +41,51 @@ var app = builder.Build();
 var sqlConnectionString = builder.Configuration.GetValue<string>("SqlConnectionString");
 bool sqlConnectionStringFound = !string.IsNullOrWhiteSpace(sqlConnectionString);
 
-app.MapGet("/", () => $"The API is up 🚀. Connection string found: {(sqlConnectionStringFound ? "✅" : "❌")}");
+// Ensure the root URL mapping is set up before any other middleware
+
+
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "MijnWebApi API V1");
+        c.RoutePrefix = "swagger"; // Set Swagger UI at /swagger
+    });
 }
 
 app.UseHttpsRedirection();
-
+app.UseAuthentication();
 // Use Authorization middleware
-app.UseAuthorization();
+ app.UseAuthorization();
+
+app.MapGet("index.html", () => Results.Redirect("/home"));
+
+app.MapGet("/home", () => $"The API is up 🚀. Connection string found: {(sqlConnectionStringFound ? "✅" : "❌")}");
 
 // Map Identity API endpoints under the 'account' prefix
 app.MapGroup("/account")
     .MapIdentityApi<IdentityUser>();
 
 // Map a logout endpoint
-app.MapPost("/account/logout", async (SignInManager<IdentityUser> signInManager) =>
-{
-    await signInManager.SignOutAsync();
-    return Results.Ok();
-}).RequireAuthorization();
+app.MapPost("/account/logout",
+    async (SignInManager<IdentityUser> signInManager,
+    [FromBody] object empty) => {
+        if (empty != null)
+        {
+            await signInManager.SignOutAsync();
+            return Results.Ok();
+        }
+        return Results.Unauthorized();
+    })
+    .RequireAuthorization();
 
 // Map controllers and require authorization by default
-app.MapControllers().RequireAuthorization();
+app.MapControllers()
+    .RequireAuthorization();
 
 app.Run();
 
