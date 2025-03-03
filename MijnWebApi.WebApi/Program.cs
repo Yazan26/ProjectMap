@@ -62,9 +62,9 @@ app.UseAuthentication();
 // Use Authorization middleware
  app.UseAuthorization();
 
-app.MapGet("index.html", () => Results.Redirect("/home"));
+//app.MapGet("index.html", () => Results.Redirect("/home"));
 
-app.MapGet("/home", () => $"The API is up 🚀. Connection string found: {(sqlConnectionStringFound ? "✅" : "❌")}");
+app.MapGet(string.Empty, () => $"The API is up 🚀. Connection string found: {(sqlConnectionStringFound ? "✅" : "❌")}");
 
 // Map Identity API endpoints under the 'account' prefix
 app.MapGroup("/account")
