@@ -8,11 +8,17 @@ using Microsoft.OpenApi.Models;
 using Microsoft.Extensions.Options;
 using System.Security.Claims;
 using MijnWebApi.WebApi.Classes.Models;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Configuration.AddUserSecrets<Program>();
+
+var connectionstring = builder.Configuration.GetValue<string>("connectionstring");
 // Adding the HTTP Context accessor to be injected. This is needed by the AspNetIdentityUserRepository
 // to resolve the current user.
+builder.Configuration.AddUserSecrets<Program>(); // Add this line to read from user secrets
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddTransient<IAuthenticationService, AspNetIdentityAuthenticationService>();
 
@@ -24,6 +30,7 @@ builder.Services.AddAuthorization(options =>
         policy.RequireClaim("wizardlevel", 8.ToString());
     });
 });
+
 // CORS
 builder.Services.AddCors(options =>
 {
@@ -49,8 +56,9 @@ builder.Services
     .AddRoles<IdentityRole>()
     .AddDapperStores(options =>
     {
-        options.ConnectionString = builder.Configuration.GetConnectionString("DapperIdentity");
+        options.ConnectionString = connectionstring;
     });
+
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -59,7 +67,12 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "MijnWebApi API", Version = "v1" });
 });
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+var app = builder.Build();
 
+var logger = app.Services.GetRequiredService<ILogger<Program>>();
+logger.LogInformation("Connection string: {ConnectionString}", connectionstring);
 
 static async Task SeedData(UserManager<IdentityUser> userManager)
 {
@@ -71,14 +84,11 @@ static async Task SeedData(UserManager<IdentityUser> userManager)
     }
 }
 
-
-
-var app = builder.Build();
-await SeedData(app.Services.GetRequiredService<UserManager<IdentityUser>>());
-
-// SQLConnectionString
-var sqlConnectionString = builder.Configuration.GetValue<string>("SqlConnectionString");
-bool sqlConnectionStringFound = !string.IsNullOrWhiteSpace(sqlConnectionString);
+using (var scope = app.Services.CreateScope())
+{
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
+    await SeedData(userManager);
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -97,9 +107,7 @@ app.UseAuthorization();
 app.UseCors("AllowAllOrigins"); // added CORS
 app.MapControllers();
 
-
-
-app.MapGet(string.Empty, () => $"The API is up 🚀. Connection string found: {(sqlConnectionStringFound ? "✅" : "❌")}");
+app.MapGet(string.Empty, () => $"The API is up 🚀. Connection string found: {(connectionstring != null ? "✅" : "❌")}");
 
 // Map Identity API endpoints under the 'account' prefix
 app.MapGroup("/account")
@@ -161,4 +169,4 @@ public class WizardController : ControllerBase
         _logger.LogInformation("Get method called");
         return "Hello from the Wizard!";
     }
-} //
+}
