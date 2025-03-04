@@ -33,18 +33,16 @@ builder.Services
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "MijnWebApi API", Version = "v1" });
+});
 
 var app = builder.Build();
 
 // SQLConnectionString
 var sqlConnectionString = builder.Configuration.GetValue<string>("SqlConnectionString");
 bool sqlConnectionStringFound = !string.IsNullOrWhiteSpace(sqlConnectionString);
-
-// Ensure the root URL mapping is set up before any other middleware
-
-
-
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -59,10 +57,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseAuthentication();
-// Use Authorization middleware
- app.UseAuthorization();
-
-//app.MapGet("index.html", () => Results.Redirect("/home"));
+app.UseAuthorization();
 
 app.MapGet(string.Empty, () => $"The API is up 🚀. Connection string found: {(sqlConnectionStringFound ? "✅" : "❌")}");
 
