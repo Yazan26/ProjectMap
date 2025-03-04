@@ -4,7 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 using MijnWebApi.WebApi.Classes;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.OpenApi.Models; // Ensure this using directive is present
+using Microsoft.OpenApi.Models;
+using Microsoft.Extensions.Options;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,7 +15,15 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddTransient<IAuthenticationService, AspNetIdentityAuthenticationService>();
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("Level8WizardOnly", policy =>
+    {
+        policy.RequireClaim("wizard");
+        policy.RequireClaim("wizardlevel", 8.ToString());
+    });
+});
+
 builder.Services
     .AddIdentityApiEndpoints<IdentityUser>(options =>
     {
@@ -38,7 +48,21 @@ builder.Services.AddSwaggerGen(c =>
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "MijnWebApi API", Version = "v1" });
 });
 
+
+static async Task SeedData(UserManager<IdentityUser> userManager)
+{
+    var user = await userManager.FindByEmailAsync("user@example.com");
+    if (user != null)
+    {
+        await userManager.AddClaimAsync(user, new Claim("wizard", "true"));
+        await userManager.AddClaimAsync(user, new Claim("wizardlevel", "8"));
+    }
+}
+
+
+
 var app = builder.Build();
+await SeedData(app.Services.GetRequiredService<UserManager<IdentityUser>>());
 
 // SQLConnectionString
 var sqlConnectionString = builder.Configuration.GetValue<string>("SqlConnectionString");
