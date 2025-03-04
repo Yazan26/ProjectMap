@@ -18,7 +18,6 @@ builder.Configuration.AddUserSecrets<Program>();
 var connectionstring = builder.Configuration.GetValue<string>("connectionstring");
 // Adding the HTTP Context accessor to be injected. This is needed by the AspNetIdentityUserRepository
 // to resolve the current user.
-builder.Configuration.AddUserSecrets<Program>(); // Add this line to read from user secrets
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddTransient<IAuthenticationService, AspNetIdentityAuthenticationService>();
 
@@ -59,20 +58,19 @@ builder.Services
         options.ConnectionString = connectionstring;
     });
 
-
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "MijnWebApi API", Version = "v1" });
+    
 });
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 var app = builder.Build();
 
 var logger = app.Services.GetRequiredService<ILogger<Program>>();
-logger.LogInformation("Connection string: {ConnectionString}", connectionstring);
 
 static async Task SeedData(UserManager<IdentityUser> userManager)
 {
@@ -112,42 +110,6 @@ app.MapGet(string.Empty, () => $"The API is up 🚀. Connection string found: {(
 // Map Identity API endpoints under the 'account' prefix
 app.MapGroup("/account")
     .MapIdentityApi<IdentityUser>();
-
-// Map a logout endpoint
-app.MapPost("/account/logout",
-    async (SignInManager<IdentityUser> signInManager,
-    [FromBody] object empty) => {
-        if (empty != null)
-        {
-            await signInManager.SignOutAsync();
-            return Results.Ok();
-        }
-        return Results.Unauthorized();
-    })
-    .RequireAuthorization();
-
-// map a register endpoint
-app.MapPost("/account/register", async (UserManager<IdentityUser> userManager, [FromBody] RegisterModel model) =>
-{
-    var user = new IdentityUser { UserName = model.Email, Email = model.Email };
-    var result = await userManager.CreateAsync(user, model.Password);
-    if (result.Succeeded)
-    {
-        return Results.Ok();
-    }
-    return Results.BadRequest(result.Errors);
-});
-
-//map a login endpoint
-app.MapPost("/account/login", async (SignInManager<IdentityUser> signInManager, [FromBody] LoginModel model) =>
-{
-    var result = await signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: false);
-    if (result.Succeeded)
-    {
-        return Results.Ok();
-    }
-    return Results.Unauthorized();
-});
 
 // Map controllers and require authorization by default
 app.MapControllers()
