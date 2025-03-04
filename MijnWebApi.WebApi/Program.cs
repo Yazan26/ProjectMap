@@ -24,6 +24,17 @@ builder.Services.AddAuthorization(options =>
         policy.RequireClaim("wizardlevel", 8.ToString());
     });
 });
+// CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAllOrigins",
+        builder =>
+        {
+            builder.AllowAnyOrigin()
+                   .AllowAnyMethod()
+                   .AllowAnyHeader();
+        });
+});
 
 builder.Services
     .AddIdentityApiEndpoints<IdentityUser>(options =>
@@ -83,6 +94,10 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseCors("AllowAllOrigins"); // added CORS
+app.MapControllers();
+
+
 
 app.MapGet(string.Empty, () => $"The API is up 🚀. Connection string found: {(sqlConnectionStringFound ? "✅" : "❌")}");
 
