@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
 using Microsoft.Extensions.Options;
 using System.Security.Claims;
+using MijnWebApi.WebApi.Classes.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -102,6 +103,29 @@ app.MapPost("/account/logout",
     })
     .RequireAuthorization();
 
+// map a register endpoint
+app.MapPost("/account/register", async (UserManager<IdentityUser> userManager, [FromBody] RegisterModel model) =>
+{
+    var user = new IdentityUser { UserName = model.Email, Email = model.Email };
+    var result = await userManager.CreateAsync(user, model.Password);
+    if (result.Succeeded)
+    {
+        return Results.Ok();
+    }
+    return Results.BadRequest(result.Errors);
+});
+
+//map a login endpoint
+app.MapPost("/account/login", async (SignInManager<IdentityUser> signInManager, [FromBody] LoginModel model) =>
+{
+    var result = await signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: false);
+    if (result.Succeeded)
+    {
+        return Results.Ok();
+    }
+    return Results.Unauthorized();
+});
+
 // Map controllers and require authorization by default
 app.MapControllers()
     .RequireAuthorization();
@@ -122,4 +146,4 @@ public class WizardController : ControllerBase
         _logger.LogInformation("Get method called");
         return "Hello from the Wizard!";
     }
-}
+} //
