@@ -57,7 +57,7 @@ namespace MijnWebApi.WebApi.Controllers
 
         [HttpPost("login")]
         [AllowAnonymous]
-        public async Task<ActionResult> Login(LoginModel model)
+        public async Task<ActionResult> Login([FromBody] LoginModel model)
         {
             if (!ModelState.IsValid)
             {
@@ -81,7 +81,7 @@ namespace MijnWebApi.WebApi.Controllers
 
         [HttpPost("register")]
         [AllowAnonymous]
-        public async Task<ActionResult> Register(RegisterModel model)
+        public async Task<ActionResult> Register([FromBody] RegisterModel model)
         {
             if (!ModelState.IsValid)
             {
