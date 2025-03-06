@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using MijnWebApi.WebApi.Classes;
+using MijnWebApi.WebApi.Classes.Models;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
@@ -28,8 +29,6 @@ namespace MijnWebApi.WebApi.Controllers
             this.roleManager = roleManager;
         }
 
-        // Existing code...
-
         [HttpPost("{id}/{claim}/{value?}", Name = "AddClaimToUser")]
         public async Task<ActionResult> AddWizardClaimToUser(
             string id, string claim, string value = null!)
@@ -54,6 +53,55 @@ namespace MijnWebApi.WebApi.Controllers
                 User = user,
                 ClaimsIdentity = userManager.GetClaimsAsync(user).Result
             });
+        }
+
+        [HttpPost("login")]
+        [AllowAnonymous]
+        public async Task<ActionResult> Login(LoginModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var result = await signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: false);
+
+            if (result.Succeeded)
+            {
+                return Ok();
+            }
+
+            if (result.IsLockedOut)
+            {
+                return Forbid();
+            }
+
+            return Unauthorized();
+        }
+
+        [HttpPost("register")]
+        [AllowAnonymous]
+        public async Task<ActionResult> Register(RegisterModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var user = new IdentityUser { UserName = model.Email, Email = model.Email };
+            var result = await userManager.CreateAsync(user, model.Password);
+
+            if (result.Succeeded)
+            {
+                return Ok();
+            }
+
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
+
+            return BadRequest(ModelState);
         }
     }
 }
