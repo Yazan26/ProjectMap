@@ -10,16 +10,26 @@ using System.Security.Claims;
 using MijnWebApi.WebApi.Classes.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Avans.Identity.Dapper; // ✅ Dapper ORM toevoegen
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Configuration.AddUserSecrets<Program>();
 
 var connectionstring = builder.Configuration.GetValue<string>("connectionstring");
+
+// ✅ JWT Secret Key ophalen
+var jwtSecret = builder.Configuration["JwtSecret"];
+var key = Encoding.ASCII.GetBytes(jwtSecret);
+
 // Adding the HTTP Context accessor to be injected. This is needed by the AspNetIdentityUserRepository
 // to resolve the current user.
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddTransient<IAuthenticationService, AspNetIdentityAuthenticationService>();
+builder.Services.AddControllers();
 
 builder.Services.AddAuthorization(options =>
 {
@@ -30,17 +40,21 @@ builder.Services.AddAuthorization(options =>
     });
 });
 
-// CORS
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowAllOrigins",
-        builder =>
+// ✅ JWT Authenticatie toevoegen
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.RequireHttpsMetadata = false; // Voor lokaal testen
+        options.SaveToken = true;
+        options.TokenValidationParameters = new TokenValidationParameters
         {
-            builder.AllowAnyOrigin()
-                   .AllowAnyMethod()
-                   .AllowAnyHeader();
-        });
-});
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(key),
+            ValidateIssuer = false,
+            ValidateAudience = false,
+            ClockSkew = TimeSpan.Zero
+        };
+    });
 
 builder.Services
     .AddIdentityApiEndpoints<IdentityUser>(options =>
@@ -58,14 +72,47 @@ builder.Services
         options.ConnectionString = connectionstring;
     });
 
-// Add services to the container.
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
+// ✅ CORS blijft ongewijzigd
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAllOrigins",
+        builder =>
+        {
+            builder.AllowAnyOrigin()
+                   .AllowAnyMethod()
+                   .AllowAnyHeader();
+        });
+});
+
+// ✅ Swagger beveiliging voor Bearer tokens
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "MijnWebApi API", Version = "v1" });
-    
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Voer een geldig JWT-token in (zonder 'Bearer ' voor het token)"
+    });
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new List<string>()
+        }
+    });
 });
+
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 var app = builder.Build();
@@ -100,9 +147,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseAuthentication();
+app.UseAuthentication(); // ✅ JWT Authenticatie wordt nu gebruikt
 app.UseAuthorization();
-app.UseCors("AllowAllOrigins"); // added CORS
+app.UseCors("AllowAllOrigins"); // ✅ CORS blijft ongewijzigd
 app.MapControllers();
 
 app.MapGet(string.Empty, () => $"The API is up 🚀. Connection string found: {(connectionstring != null ? "✅" : "❌")}");

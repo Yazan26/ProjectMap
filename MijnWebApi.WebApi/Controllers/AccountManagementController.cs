@@ -1,107 +1,122 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using MijnWebApi.WebApi.Classes;
+using Microsoft.IdentityModel.Tokens;
 using MijnWebApi.WebApi.Classes.Models;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace MijnWebApi.WebApi.Controllers
 {
     [Route("account/[controller]")]
-    [Authorize(Policy = "Level8WizardOnly")]
+    [ApiController]
     public class AccountManagementController : Controller
     {
-        private readonly ILogger<AccountManagementController> logger;
-        private readonly UserManager<IdentityUser> userManager;
-        private readonly SignInManager<IdentityUser> signInManager;
-        private readonly RoleManager<IdentityRole> roleManager;
+        private readonly ILogger<AccountManagementController> _logger;
+        private readonly UserManager<IdentityUser> _userManager;
+        private readonly SignInManager<IdentityUser> _signInManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly IConfiguration _configuration; // Nodig voor JWT-secret key
 
         public AccountManagementController(
             ILogger<AccountManagementController> logger,
             UserManager<IdentityUser> userManager,
             SignInManager<IdentityUser> signInManager,
-            RoleManager<IdentityRole> roleManager)
+            RoleManager<IdentityRole> roleManager,
+            IConfiguration configuration)
         {
-            this.logger = logger;
-            this.userManager = userManager;
-            this.signInManager = signInManager;
-            this.roleManager = roleManager;
-        }
-
-        [HttpPost("{id}/{claim}/{value?}", Name = "AddClaimToUser")]
-        public async Task<ActionResult> AddWizardClaimToUser(
-            string id, string claim, string value = null!)
-        {
-            if (id is null)
-            {
-                return BadRequest("Id is required");
-            }
-            var user = await userManager.FindByIdAsync(id);
-            if (user is null)
-            {
-                return NotFound("User not found");
-            }
-            var addClaimsResult = await userManager.AddClaimAsync(user, new Claim(claim, value));
-
-            if (!addClaimsResult.Succeeded)
-            {
-                return BadRequest();
-            }
-            return Ok(new AccountViewModel()
-            {
-                User = user,
-                ClaimsIdentity = userManager.GetClaimsAsync(user).Result
-            });
-        }
-
-        [HttpPost("login")]
-        [AllowAnonymous]
-        public async Task<ActionResult> Login([FromBody] LoginModel model)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            var result = await signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: false);
-
-            if (result.Succeeded)
-            {
-                return Ok();
-            }
-
-            if (result.IsLockedOut)
-            {
-                return Forbid();
-            }
-
-            return Unauthorized();
+            _logger = logger;
+            _userManager = userManager;
+            _signInManager = signInManager;
+            _roleManager = roleManager;
+            _configuration = configuration;
         }
 
         [HttpPost("register")]
         [AllowAnonymous]
         public async Task<ActionResult> Register([FromBody] RegisterModel model)
         {
+            _logger.LogInformation("Registratie gestart voor {Email}", model.Email);
+
             if (!ModelState.IsValid)
             {
+                _logger.LogWarning("Registratie mislukt: ModelState niet valid.");
                 return BadRequest(ModelState);
             }
 
             var user = new IdentityUser { UserName = model.Email, Email = model.Email };
-            var result = await userManager.CreateAsync(user, model.Password);
+            var result = await _userManager.CreateAsync(user, model.Password);
 
             if (result.Succeeded)
             {
-                return Ok();
+                _logger.LogInformation("Gebruiker succesvol geregistreerd: {Email}", model.Email);
+                return Ok(new { message = "Registratie succesvol!" });
             }
 
             foreach (var error in result.Errors)
             {
-                ModelState.AddModelError(string.Empty, error.Description);
+                _logger.LogError("Registratiefout: {ErrorDescription}", error.Description);
+                ModelState.AddModelError("Error", error.Description);
             }
 
             return BadRequest(ModelState);
+        }
+
+        [HttpPost("login")]
+        [AllowAnonymous]
+        public async Task<ActionResult<object>> Login([FromBody] LoginModel model)
+        {
+            _logger.LogInformation("Login gestart voor {Email}", model.Email);
+
+            if (!ModelState.IsValid)
+            {
+                _logger.LogWarning("Login mislukt: ModelState niet valid.");
+                return BadRequest(ModelState);
+            }
+
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
+            {
+                _logger.LogWarning("Login geweigerd: Gebruiker niet gevonden {Email}", model.Email);
+                return Unauthorized(new { message = "Ongeldige inloggegevens." });
+            }
+
+            var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: false);
+
+            if (!result.Succeeded)
+            {
+                _logger.LogWarning("Login geweigerd: Ongeldige gegevens voor {Email}", model.Email);
+                return Unauthorized(new { message = "Ongeldige inloggegevens." });
+            }
+
+            _logger.LogInformation("Login succesvol voor {Email}", model.Email);
+
+            // ✅ Genereer JWT Token
+            var token = GenerateJwtToken(user);
+            return Ok(new { token });
+        }
+
+        private string GenerateJwtToken(IdentityUser user)
+        {
+            var jwtSecret = _configuration["JwtSecret"];
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(jwtSecret); // Ophalen uit appsettings.json
+
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new[]
+                {
+                    new Claim(ClaimTypes.NameIdentifier, user.Id),
+                    new Claim(ClaimTypes.Email, user.Email)
+                }),
+                Expires = DateTime.UtcNow.AddHours(1),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
+
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            return tokenHandler.WriteToken(token);
         }
     }
 }
