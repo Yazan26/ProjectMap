@@ -1,11 +1,14 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MijnWebApi.WebApi.Classes;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
+
 [ApiController]
 [Route("[controller]")]
+[Authorize]
 public class Enviroment2DController : ControllerBase
 {
     private static List<Enviroment2D> environments = new List<Enviroment2D>();
