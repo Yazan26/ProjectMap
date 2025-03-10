@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 [ApiController]
 [Route("[controller]")]
-[Authorize]
+[Authorize(Roles = "User, Admin")]
 public class Enviroment2DController : ControllerBase
 {
     private static List<Enviroment2D> environments = new List<Enviroment2D>();

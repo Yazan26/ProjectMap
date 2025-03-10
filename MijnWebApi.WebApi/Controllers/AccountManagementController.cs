@@ -18,7 +18,7 @@ namespace MijnWebApi.WebApi.Controllers
         private readonly UserManager<IdentityUser> _userManager;
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly RoleManager<IdentityRole> _roleManager;
-        private readonly IConfiguration _configuration; // Nodig voor JWT-secret key
+        private readonly IConfiguration _configuration; // user secrets toevoegen
 
         public AccountManagementController(
             ILogger<AccountManagementController> logger,
@@ -46,12 +46,14 @@ namespace MijnWebApi.WebApi.Controllers
                 return BadRequest(ModelState);
             }
 
+
             var user = new IdentityUser { UserName = model.Email, Email = model.Email };
             var result = await _userManager.CreateAsync(user, model.Password);
 
             if (result.Succeeded)
             {
                 _logger.LogInformation("Gebruiker succesvol geregistreerd: {Email}", model.Email);
+                await _userManager.AddToRoleAsync(user, "User");
                 return Ok(new { message = "Registratie succesvol!" });
             }
 
@@ -66,7 +68,7 @@ namespace MijnWebApi.WebApi.Controllers
 
         [HttpPost("login")]
         [AllowAnonymous]
-        public async Task<ActionResult<object>> Login([FromBody] LoginModel model)
+        public async Task<ActionResult> Login([FromBody] LoginModel model)
         {
             _logger.LogInformation("Login gestart voor {Email}", model.Email);
 
@@ -93,30 +95,42 @@ namespace MijnWebApi.WebApi.Controllers
 
             _logger.LogInformation("Login succesvol voor {Email}", model.Email);
 
-            // ✅ Genereer JWT Token
-            var token = GenerateJwtToken(user);
-            return Ok(new { token });
+            // ✅ Call the method to generate a token
+            var token = await GenerateJwtToken(user);
+
+            return Ok(new { token }); // ✅ Return token directly instead of wrapping it in "result"
         }
 
-        private string GenerateJwtToken(IdentityUser user)
+        private async Task<string> GenerateJwtToken(IdentityUser user)
         {
             var jwtSecret = _configuration["JwtSecret"];
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(jwtSecret); // Ophalen uit appsettings.json
+            var key = Encoding.ASCII.GetBytes(jwtSecret);
+
+            var claims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, user.Id),
+        new Claim(ClaimTypes.Email, user.Email)
+    };
+
+            // ✅ Fetch roles using Identity's RoleManager
+            var roles = await _userManager.GetRolesAsync(user);
+            foreach (var role in roles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role)); // ✅ Add role claims to JWT
+            }
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {
-                Subject = new ClaimsIdentity(new[]
-                {
-                    new Claim(ClaimTypes.NameIdentifier, user.Id),
-                    new Claim(ClaimTypes.Email, user.Email)
-                }),
+                Subject = new ClaimsIdentity(claims),
                 Expires = DateTime.UtcNow.AddHours(1),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
 
             var token = tokenHandler.CreateToken(tokenDescriptor);
-            return tokenHandler.WriteToken(token);
+            return tokenHandler.WriteToken(token); // ✅ Correctly return a Task<string>
         }
+
+
     }
 }

@@ -13,7 +13,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using Avans.Identity.Dapper; // ✅ Dapper ORM toevoegen
+using Avans.Identity.Dapper;
+using Microsoft.AspNetCore.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +25,7 @@ var connectionstring = builder.Configuration.GetValue<string>("connectionstring"
 // ✅ JWT Secret Key ophalen
 var jwtSecret = builder.Configuration["JwtSecret"];
 var key = Encoding.ASCII.GetBytes(jwtSecret);
+
 
 // Adding the HTTP Context accessor to be injected. This is needed by the AspNetIdentityUserRepository
 // to resolve the current user.
@@ -44,7 +46,7 @@ builder.Services.AddAuthorization(options =>
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        options.RequireHttpsMetadata = false; // Voor lokaal testen
+        options.RequireHttpsMetadata = false;
         options.SaveToken = true;
         options.TokenValidationParameters = new TokenValidationParameters
         {
@@ -52,7 +54,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(key),
             ValidateIssuer = false,
             ValidateAudience = false,
-            ClockSkew = TimeSpan.Zero
+            ClockSkew = TimeSpan.Zero,
+            ValidAlgorithms = new[] { SecurityAlgorithms.HmacSha256 }
         };
     });
 
@@ -116,6 +119,25 @@ builder.Services.AddSwaggerGen(c =>
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 var app = builder.Build();
+async Task EnsureRolesAsync(IServiceProvider serviceProvider)
+{
+    var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+    string[] roles = { "User", "Admin" };
+    foreach (var role in roles)
+    {
+        if (!await roleManager.RoleExistsAsync(role))
+        {
+            await roleManager.CreateAsync(new IdentityRole(role));
+        }
+    }
+}
+
+using (var scope = app.Services.CreateScope()) // ✅ Run Role Setup Before API Starts
+{
+    var services = scope.ServiceProvider;
+    await EnsureRolesAsync(services);
+}
 
 var logger = app.Services.GetRequiredService<ILogger<Program>>();
 
