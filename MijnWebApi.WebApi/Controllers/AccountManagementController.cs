@@ -38,11 +38,11 @@ namespace MijnWebApi.WebApi.Controllers
         [AllowAnonymous]
         public async Task<ActionResult> Register([FromBody] RegisterModel model)
         {
-            _logger.LogInformation("Registratie gestart voor {Email}", model.Email);
+          //  _logger.LogInformation("Registratie gestart voor {Email}", model.Email);
 
             if (!ModelState.IsValid)
             {
-                _logger.LogWarning("Registratie mislukt: ModelState niet valid.");
+             //   _logger.LogWarning("Registratie mislukt: ModelState niet valid.");
                 return BadRequest(ModelState);
             }
 
@@ -52,14 +52,14 @@ namespace MijnWebApi.WebApi.Controllers
 
             if (result.Succeeded)
             {
-                _logger.LogInformation("Gebruiker succesvol geregistreerd: {Email}", model.Email);
+              //  _logger.LogInformation("Gebruiker succesvol geregistreerd: {Email}", model.Email);
                 await _userManager.AddToRoleAsync(user, "User");
                 return Ok(new { message = "Registratie succesvol!" });
             }
 
             foreach (var error in result.Errors)
             {
-                _logger.LogError("Registratiefout: {ErrorDescription}", error.Description);
+             //   _logger.LogError("Registratiefout: {ErrorDescription}", error.Description);
                 ModelState.AddModelError("Error", error.Description);
             }
 
@@ -70,18 +70,18 @@ namespace MijnWebApi.WebApi.Controllers
         [AllowAnonymous]
         public async Task<ActionResult> Login([FromBody] LoginModel model)
         {
-            _logger.LogInformation("Login gestart voor {Email}", model.Email);
+           // _logger.LogInformation("Login gestart voor {Email}", model.Email);
 
             if (!ModelState.IsValid)
             {
-                _logger.LogWarning("Login mislukt: ModelState niet valid.");
+            //    _logger.LogWarning("Login mislukt: ModelState niet valid.");
                 return BadRequest(ModelState);
             }
 
             var user = await _userManager.FindByEmailAsync(model.Email);
             if (user == null)
             {
-                _logger.LogWarning("Login geweigerd: Gebruiker niet gevonden {Email}", model.Email);
+           //     _logger.LogWarning("Login geweigerd: Gebruiker niet gevonden {Email}", model.Email);
                 return Unauthorized(new { message = "Ongeldige inloggegevens." });
             }
 
@@ -89,16 +89,16 @@ namespace MijnWebApi.WebApi.Controllers
 
             if (!result.Succeeded)
             {
-                _logger.LogWarning("Login geweigerd: Ongeldige gegevens voor {Email}", model.Email);
+             //   _logger.LogWarning("Login geweigerd: Ongeldige gegevens voor {Email}", model.Email);
                 return Unauthorized(new { message = "Ongeldige inloggegevens." });
             }
 
-            _logger.LogInformation("Login succesvol voor {Email}", model.Email);
+           // _logger.LogInformation("Login succesvol voor {Email}", model.Email);
 
-            // ✅ Call the method to generate a token
+            //  Call the method to generate a token \\
             var token = await GenerateJwtToken(user);
 
-            return Ok(new { token }); // ✅ Return token directly instead of wrapping it in "result"
+            return Ok(new { token }); //  Return token directly instead of wrapping it in "result"
         }
 
         private async Task<string> GenerateJwtToken(IdentityUser user)
@@ -113,11 +113,11 @@ namespace MijnWebApi.WebApi.Controllers
         new Claim(ClaimTypes.Email, user.Email)
     };
 
-            // ✅ Fetch roles using Identity's RoleManager
+            //  Ensure correct role claim format for ASP.NET Core
             var roles = await _userManager.GetRolesAsync(user);
             foreach (var role in roles)
             {
-                claims.Add(new Claim(ClaimTypes.Role, role)); // ✅ Add role claims to JWT
+                claims.Add(new Claim(ClaimTypes.Role, role)); //  This ensures ASP.NET Core recognizes the role
             }
 
             var tokenDescriptor = new SecurityTokenDescriptor
@@ -128,7 +128,7 @@ namespace MijnWebApi.WebApi.Controllers
             };
 
             var token = tokenHandler.CreateToken(tokenDescriptor);
-            return tokenHandler.WriteToken(token); // ✅ Correctly return a Task<string>
+            return tokenHandler.WriteToken(token);
         }
 
 
