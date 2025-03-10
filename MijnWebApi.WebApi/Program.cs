@@ -55,7 +55,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuer = false,
             ValidateAudience = false,
             ClockSkew = TimeSpan.Zero,
-            ValidAlgorithms = new[] { SecurityAlgorithms.HmacSha256 }
+            ValidAlgorithms = new[] { SecurityAlgorithms.HmacSha256 },
+            RoleClaimType = "role"
         };
     });
 

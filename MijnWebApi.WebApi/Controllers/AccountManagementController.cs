@@ -108,16 +108,16 @@ namespace MijnWebApi.WebApi.Controllers
             var key = Encoding.ASCII.GetBytes(jwtSecret);
 
             var claims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, user.Id),
-        new Claim(ClaimTypes.Email, user.Email)
-    };
+{
+    new Claim(ClaimTypes.NameIdentifier, user.Id),
+    new Claim(ClaimTypes.Email, user.Email)
+};
 
             //  Ensure correct role claim format for ASP.NET Core
             var roles = await _userManager.GetRolesAsync(user);
             foreach (var role in roles)
             {
-                claims.Add(new Claim(ClaimTypes.Role, role)); //  This ensures ASP.NET Core recognizes the role
+                claims.Add(new Claim("role", role)); // Use "role" here instead of ClaimTypes.Role
             }
 
             var tokenDescriptor = new SecurityTokenDescriptor
