@@ -1,8 +1,8 @@
 ﻿using System.Security.Claims;
 
-namespace MijnWebApi.WebApi.Classes
+namespace MijnWebApi.WebApi.Classes.Services
 {
-    
+
 
 
     /// <summary>

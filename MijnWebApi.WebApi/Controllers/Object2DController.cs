@@ -1,61 +1,85 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MijnWebApi.WebApi.Classes;
+using MijnWebApi.WebApi.Classes.Interfaces;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Logging;
+
 
 [ApiController]
 [Route("[controller]")]
 public class Object2DController : ControllerBase
 {
-    private static List<Object2D> objects = new List<Object2D>();
+    private readonly IObject2DRepository _Object2DRepository;
+    private readonly ILogger<Object2DController> _logger;
 
-    [HttpGet]
-    public ActionResult<IEnumerable<Object2D>> Get()
+    public Object2DController(IObject2DRepository Object2DRepository, ILogger<Object2DController> logger)
     {
-        return objects;
+        _Object2DRepository = Object2DRepository;
+        _logger = logger;
     }
 
-    [HttpGet("{name}")]
-    public ActionResult<Object2D> Get(string name)
+    [HttpGet]
+    public async Task<IEnumerable<Object2D>> Get()
     {
-        var obj = objects.FirstOrDefault(o => o.Name == name);
-        if (obj == null)
+        _logger.LogInformation("Fetching all game objects.");
+        return await _Object2DRepository.GetAllObject2DsAsync();
+    }
+
+    [HttpGet("{id:guid}")]
+    [Authorize]
+    public async Task<ActionResult<Object2D>> GetById(Guid id)
+    {
+        _logger.LogInformation($"Fetching game object with ID: {id}");
+        var Object2D = await _Object2DRepository.GetObject2DByIdAsync(id);
+        if (Object2D == null)
         {
+            _logger.LogWarning($"Game object with ID {id} not found.");
             return NotFound();
         }
-        return obj;
+        return Ok(Object2D);
     }
 
     [HttpPost]
-    public ActionResult Add(Object2D obj)
+    [Authorize]
+    public async Task<IActionResult> Create([FromBody] Object2D Object2D)
     {
-        objects.Add(obj);
-        return CreatedAtAction(nameof(Get), new { name = obj.Name }, obj);
+        if (Object2D == null)
+        {
+            _logger.LogWarning("Attempted to create a null game object.");
+            return BadRequest("Invalid game object data.");
+        }
+
+        Object2D.Id = Object2D.Id == Guid.Empty ? Guid.NewGuid() : Object2D.Id;
+        _logger.LogInformation($"Creating game object with ID: {Object2D.Id}");
+
+        await _Object2DRepository.AddObject2DAsync(Object2D);
+        return CreatedAtAction(nameof(GetById), new { id = Object2D.Id }, Object2D);
     }
 
-    [HttpPut("{name}")]
-    public ActionResult Update(string name, Object2D updatedObj)
+    [HttpPut("{id:guid}")]
+    [Authorize]
+    public async Task<IActionResult> Update(Guid id, [FromBody] Object2D Object2D)
     {
-        var obj = objects.FirstOrDefault(o => o.Name == name);
-        if (obj == null)
+        if (Object2D == null || id != Object2D.Id)
         {
-            return NotFound();
+            _logger.LogWarning("Game object ID mismatch or invalid data provided.");
+            return BadRequest("Invalid game object data.");
         }
-        obj.X = updatedObj.X;
-        obj.Y = updatedObj.Y;
+
+        _logger.LogInformation($"Updating game object with ID: {id}");
+        await _Object2DRepository.UpdateObject2DAsync(Object2D);
         return NoContent();
     }
 
-    [HttpDelete("{name}")]
-    public ActionResult Delete(string name)
+    [HttpDelete("{id:guid}")]
+    [Authorize]
+    public async Task<IActionResult> Delete(Guid id)
     {
-        var obj = objects.FirstOrDefault(o => o.Name == name);
-        if (obj == null)
-        {
-            return NotFound();
-        }
-        objects.Remove(obj);
+        _logger.LogInformation($"Deleting game object with ID: {id}");
+        await _Object2DRepository.DeleteObject2DAsync(id);
         return NoContent();
     }
 }

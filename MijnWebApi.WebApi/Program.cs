@@ -1,36 +1,36 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.Data.SqlClient;
+using System.Data;
+using Microsoft.Extensions.Logging;
+using Dapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using MijnWebApi.WebApi.Classes;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
-using Microsoft.Extensions.Options;
-using System.Security.Claims;
-using MijnWebApi.WebApi.Classes.Models;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using Avans.Identity.Dapper;
-using Microsoft.AspNetCore.Identity;
+using System.Security.Claims;
+using MijnWebApi.WebApi.Classes.Interfaces;
+using MijnWebApi.WebApi.Classes.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Configuration.AddUserSecrets<Program>();
+// ✅ Load User Secrets (in Development)
+if (builder.Environment.IsDevelopment())
+{
+    builder.Configuration.AddUserSecrets<Program>();
+}
 
-var connectionstring = builder.Configuration.GetValue<string>("connectionstring");
+var logger = LoggerFactory.Create(logging => logging.AddConsole()).CreateLogger<Program>();
 
-// ✅ JWT Secret Key ophalen
-var jwtSecret = builder.Configuration["JwtSecret"];
-var key = Encoding.ASCII.GetBytes(jwtSecret);
-
+var sqlConnectionString = builder.Configuration.GetValue<string>("connectionstring");
+var sqlConnectionStringFound = !string.IsNullOrWhiteSpace(sqlConnectionString);
 
 // Adding the HTTP Context accessor to be injected. This is needed by the AspNetIdentityUserRepository
 // to resolve the current user.
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddTransient<IAuthenticationService, AspNetIdentityAuthenticationService>();
+builder.Services.AddOpenApi();
 builder.Services.AddControllers();
 
 builder.Services.AddAuthorization(options =>
@@ -41,24 +41,6 @@ builder.Services.AddAuthorization(options =>
         policy.RequireClaim("wizardlevel", 8.ToString());
     });
 });
-
-// ✅ JWT Authenticatie toevoegen
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.RequireHttpsMetadata = false;
-        options.SaveToken = true;
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(key),
-            ValidateIssuer = false,
-            ValidateAudience = false,
-            ClockSkew = TimeSpan.Zero,
-            ValidAlgorithms = new[] { SecurityAlgorithms.HmacSha256 },
-            RoleClaimType = "role"
-        };
-    });
 
 builder.Services
     .AddIdentityApiEndpoints<IdentityUser>(options =>
@@ -73,10 +55,10 @@ builder.Services
     .AddRoles<IdentityRole>()
     .AddDapperStores(options =>
     {
-        options.ConnectionString = connectionstring;
+        options.ConnectionString = sqlConnectionString;
     });
 
-// ✅ CORS blijft ongewijzigd
+// ✅ CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAllOrigins",
@@ -117,9 +99,39 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+// ✅ Register direct DB connection
+builder.Services.AddScoped<IDbConnection>(sp =>
+{
+    logger.LogInformation("🔗 Attempting to create a database connection...");
+    return new SqlConnection(sqlConnectionString);
+});
+
+// ✅ Register IdentityService and Repositories
+builder.Services.AddScoped<IIdentityService, IdentityService>();
+builder.Services.AddScoped<IEnvironment2DRepository, Environment2DRepository>();
+builder.Services.AddScoped<IObject2DRepository, Object2DRepository>();
+
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 var app = builder.Build();
+
+// Keep default Identity endpoints mapped under /auth.
+app.MapGroup("/auth")
+    .MapIdentityApi<IdentityUser>();
+
+// Custom logout endpoint.
+app.MapPost("/auth/logout",
+    async (SignInManager<IdentityUser> signInManager, [FromBody] object empty) =>
+    {
+        if (empty != null)
+        {
+            await signInManager.SignOutAsync();
+            return Results.Ok();
+        }
+        return Results.Unauthorized();
+    })
+.RequireAuthorization();
+
 async Task EnsureRolesAsync(IServiceProvider serviceProvider)
 {
     var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
@@ -139,8 +151,6 @@ using (var scope = app.Services.CreateScope()) // ✅ Run Role Setup Before API 
     var services = scope.ServiceProvider;
     await EnsureRolesAsync(services);
 }
-
-var logger = app.Services.GetRequiredService<ILogger<Program>>();
 
 static async Task SeedData(UserManager<IdentityUser> userManager)
 {
@@ -175,8 +185,6 @@ app.UseAuthorization();
 app.UseCors("AllowAllOrigins"); // ✅ CORS blijft ongewijzigd
 app.MapControllers();
 
-app.MapGet(string.Empty, () => $"The API is up 🚀. Connection string found: {(connectionstring != null ? "✅" : "❌")}");
-
 // Map Identity API endpoints under the 'account' prefix
 app.MapGroup("/account")
     .MapIdentityApi<IdentityUser>();
@@ -185,20 +193,12 @@ app.MapGroup("/account")
 app.MapControllers()
     .RequireAuthorization();
 
-app.Run();
+app.MapGet("/", () => $"The API is up. Connection string found: {(sqlConnectionStringFound ? "Yes" : "No")}");
 
-[Authorize]
-public class WizardController : ControllerBase
+app.Use(async (context, next) =>
 {
-    private readonly ILogger<WizardController> _logger;
-    public WizardController(ILogger<WizardController> logger)
-    {
-        _logger = logger;
-    }
-    [HttpGet]
-    public string Get()
-    {
-        _logger.LogInformation("Get method called");
-        return "Hello from the Wizard!";
-    }
-}
+    Console.WriteLine($"📌 Incoming request: {context.Request.Method} {context.Request.Path}");
+    await next();
+});
+
+app.Run();
