@@ -39,9 +39,13 @@ public class Environment2DRepository : IEnvironment2DRepository
     {
         try
         {
-            _logger.LogInformation($"🔍 Fetching world with ID: {id}");
-
-            string sql = "SELECT id, Name, MaxHeight, MaxWidth, OwnerUserID FROM Environment2D WHERE Id = @Id";
+            string sql = @"SELECT 
+                  ID AS Id, 
+                  Name, 
+                  MaxHeight, 
+                  MaxWidth, 
+                  OwnerUserID AS OwnerUserID 
+               FROM Environment2D WHERE Id = @Id";
             if (_dbConnection.State != ConnectionState.Open) _dbConnection.Open();
             var world = await _dbConnection.QueryFirstOrDefaultAsync<Environment2D>(sql, new { Id = id });
 
