@@ -47,10 +47,14 @@ public class Environment2DController : ControllerBase
     public async Task<IActionResult> Create([FromBody] Environment2D environment2D)
     {
         try
-        {
-            _logger.LogInformation($"🚀 Create() called with: {JsonConvert.SerializeObject(environment2D)}");
-
+        { 
             // Ensure the GUID is valid
+            
+            if(environment2D == null)
+            {
+                return BadRequest("Invalid request: Environment2D is null!");
+            }
+            
             if (environment2D.OwnerUserID == Guid.Empty)
             {
                 _logger.LogError("❌ ERROR: Invalid or missing AppUserId.");
@@ -65,14 +69,13 @@ public class Environment2DController : ControllerBase
 
             await _environment2DRepository.AddWorldAsync(environment2D);
 
-            _logger.LogInformation($"✅ Ins  ert attempt completed for ID: {environment2D.Id}");
+         
 
             return CreatedAtAction(nameof(GetById), new { id = environment2D.Id }, environment2D);
         }
         catch (Exception ex)
         {
-            _logger.LogError($"❌ ERROR in Create: {ex.Message}");
-            return StatusCode(500, "Internal server error");
+            return StatusCode(500, "Internal server error"+ ex.Message);
         }
     }
 

@@ -193,7 +193,7 @@ app.MapGroup("/account")
 app.MapControllers()
     .RequireAuthorization();
 
-app.MapGet("/", () => $"The API is up. Connection string found: {(sqlConnectionStringFound ? "Yes" : "No")}");
+app.MapGet("/", () => $"The API is up 🚀. Connection string found: {(sqlConnectionStringFound ? "✅" : "❌")}");
 
 app.Use(async (context, next) =>
 {
