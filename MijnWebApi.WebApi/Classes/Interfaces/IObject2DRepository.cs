@@ -13,5 +13,7 @@ namespace MijnWebApi.WebApi.Classes.Interfaces
 
         Task<IEnumerable<Object2D>> GetObjectsForUserWorld(Guid userId, Guid worldId);
 
+        Task<IEnumerable<Object2D>> GetObjectsForEnvironment(Guid environmentId);
+
     }
 }
