@@ -29,10 +29,15 @@ public class Object2DController : ControllerBase
     [Authorize]
     public async Task<ActionResult<IEnumerable<Object2D>>> GetObjectsForUserWorld(Guid worldId)
     {
-        var userId = _authenticationService.GetCurrentAuthenticatedUserId(); // ✅ Fetch Current User ID
-        if (string.IsNullOrEmpty(userId))
+        var userIdString = _authenticationService.GetCurrentAuthenticatedUserId();
+        if (string.IsNullOrEmpty(userIdString))
         {
             return Unauthorized("User not authenticated.");
+        }
+
+        if (!Guid.TryParse(userIdString, out Guid userId))
+        {
+            return BadRequest("Invalid user ID.");
         }
 
         _logger.LogInformation($"📡 Fetching objects for UserID: {userId} in WorldID: {worldId}");
@@ -47,6 +52,7 @@ public class Object2DController : ControllerBase
 
         return Ok(objects);
     }
+
 
     [HttpPost]
     [Authorize]
@@ -70,15 +76,19 @@ public class Object2DController : ControllerBase
         await _Object2DRepository.AddObject2DAsync(Object2D);
         return CreatedAtAction(nameof(GetObjectsForUserWorld), new { worldId = Object2D.Environment2DID }, Object2D);
     }
-
     [HttpDelete("{id}")]
     [Authorize]
     public async Task<IActionResult> DeleteObject2D(Guid id)
     {
-        var userId = _authenticationService.GetCurrentAuthenticatedUserId(); // ✅ Get User ID
-        if (string.IsNullOrEmpty(userId))
+        var userIdString = _authenticationService.GetCurrentAuthenticatedUserId();
+        if (string.IsNullOrEmpty(userIdString))
         {
             return Unauthorized("User not authenticated.");
+        }
+
+        if (!Guid.TryParse(userIdString, out Guid userId))
+        {
+            return BadRequest("Invalid user ID.");
         }
 
         _logger.LogInformation($"🗑️ Deleting Object {id} for User {userId}");
@@ -93,4 +103,5 @@ public class Object2DController : ControllerBase
             return NotFound("Object not found or you don't have permission to delete it.");
         }
     }
+
 }

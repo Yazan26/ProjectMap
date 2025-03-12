@@ -7,15 +7,9 @@ namespace MijnWebApi.WebApi.Classes.Interfaces
     {
         Task<IEnumerable<Object2D>> GetAllObject2DsAsync();
         Task<Object2D?> GetObject2DByIdAsync(Guid id);
+        Task<IEnumerable<Object2D>> GetObjectsForUserWorld(Guid userId, Guid worldId); // ✅ Matches exactly
         Task AddObject2DAsync(Object2D Object2D);
-        Task UpdateObject2DAsync(Object2D Object2D);
-        Task DeleteObject2DAsync(Guid id);
-
-        Task<IEnumerable<Object2D>> GetObjectsForUserWorld(Guid userId, Guid worldId);
-
-        Task<IEnumerable<Object2D>> GetObjectsForEnvironment(Guid environmentId);
-
-        Task<bool> DeleteObject2DAsync(Guid id, string userId); // ✅ Ensure only the owner can delete
+        Task<bool> DeleteObject2DAsync(Guid id, Guid userId); // ✅ Ensure userId is Gui
     }
 }
 
