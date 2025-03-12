@@ -28,9 +28,10 @@ public class Object2DRepository : IObject2DRepository
 
     public async Task AddObject2DAsync(Object2D object2D)
     {
-        var sql = @"INSERT INTO Object2D (Id, PrefabId, PositionX, PositionY, ScaleX, ScaleY, RotationZ, SortingLayer, Environment2DID) 
-                        VALUES (@Id, @PrefabId, @PositionX, @PositionY, @ScaleX, @ScaleY, @RotationZ, @SortingLayer, @Environment2DID)";
+        var sql = @"INSERT INTO Object2D (Id, PrefabId, PositionX, PositionY, ScaleX, ScaleY, RotationZ, SortingLayer, Environment2DID, UserID) 
+            VALUES (@Id, @PrefabId, @PositionX, @PositionY, @ScaleX, @ScaleY, @RotationZ, @SortingLayer, @Environment2DID, @UserID)";
         await _dbConnection.ExecuteAsync(sql, object2D);
+
     }
 
     public async Task UpdateObject2DAsync(Object2D object2D)
