@@ -10,22 +10,22 @@ namespace MijnWebApi.WebApi.Classes.Models
         public string PrefabId { get; set; }
 
         [Required]
-        public int PositionX { get; set; }
+        public float PositionX { get; set; }
 
         [Required]
-        public int PositionY { get; set; }
+        public float PositionY { get; set; }
 
         [Required]
-        public int ScaleX { get; set; }
+        public float ScaleX { get; set; }
 
         [Required]
-        public int ScaleY { get; set; }
+        public float ScaleY { get; set; }
 
         [Required]
-        public int RotationZ { get; set; }
+        public float RotationZ { get; set; }
 
         [Required]
-        public int SortingLayer { get; set; }
+        public float SortingLayer { get; set; }
 
         public Guid? Environment2DID { get; set; } // Nullable because `worldId` allows NULL in your schema
     }
