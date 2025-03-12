@@ -46,4 +46,18 @@ public class Object2DRepository : IObject2DRepository
         var sql = "DELETE FROM Object2D WHERE Id = @Id";
         await _dbConnection.ExecuteAsync(sql, new { Id = id });
     }
+
+    public async Task<IEnumerable<Object2D>> GetObjectsForUserWorld(Guid userId, Guid worldId)
+    {
+        var sql = "SELECT * FROM Object2D WHERE EnvironmentID = @WorldId";
+        return await _dbConnection.QueryAsync<Object2D>(sql, new { WorldId = worldId });
+    }
+
+    public async Task<IEnumerable<Object2D>> GetObjectsForEnvironment(Guid environmentId)
+    {
+        var sql = "SELECT * FROM Object2D WHERE EnvironmentID = @EnvironmentId";
+        return await _dbConnection.QueryAsync<Object2D>(sql, new { EnvironmentId = environmentId });
+    }
+
+
 }

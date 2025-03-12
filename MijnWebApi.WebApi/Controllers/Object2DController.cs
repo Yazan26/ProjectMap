@@ -42,6 +42,45 @@ public class Object2DController : ControllerBase
         return Ok(Object2D);
     }
 
+    [HttpGet]
+    [Authorize]
+    public async Task<ActionResult<IEnumerable<Object2D>>> GetObjectsByEnvironment([FromQuery] Guid environmentId)
+    {
+        if (environmentId == Guid.Empty)
+        {
+            return BadRequest("Environment ID is missing.");
+        }
+
+        var objects = await _Object2DRepository.GetObjectsForEnvironment(environmentId);
+
+        if (objects == null || !objects.Any())
+        {
+            return NotFound("No objects found for this environment.");
+        }
+
+        return Ok(objects);
+    }
+
+
+    [HttpGet("user/{userId}/world/{worldId}")]
+    [Authorize]
+    public async Task<ActionResult<IEnumerable<Object2D>>> GetObjectsForUserWorld(Guid userId, Guid worldId)
+    {
+        if (userId == Guid.Empty || worldId == Guid.Empty)
+        {
+            return BadRequest("Invalid user or world ID.");
+        }
+
+        var objects = await _Object2DRepository.GetObjectsForUserWorld(userId, worldId);
+
+        if (objects == null || !objects.Any())
+        {
+            return NotFound("No objects found for this user in the selected world.");
+        }
+
+        return Ok(objects);
+    }
+
     [HttpPost]
     [Authorize]
     public async Task<IActionResult> Create([FromBody] Object2D Object2D)
