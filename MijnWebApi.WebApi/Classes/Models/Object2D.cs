@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace MijnWebApi.WebApi.Classes.Models
 {
@@ -27,6 +28,9 @@ namespace MijnWebApi.WebApi.Classes.Models
         [Required]
         public float SortingLayer { get; set; }
 
-        public Guid? Environment2DID { get; set; } // Nullable because `worldId` allows NULL in your schema
+        public Guid? Environment2DID { get; set; } // Wereld ID (kan NULL zijn)
+
+        [Required]
+        public Guid UserID { get; set; } // ✅ Nieuw veld toegevoegd!
     }
 }
