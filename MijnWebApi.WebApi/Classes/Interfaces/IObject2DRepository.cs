@@ -1,4 +1,6 @@
 ﻿
+using MijnWebApi.WebApi.Classes.Models;
+
 namespace MijnWebApi.WebApi.Classes.Interfaces
 {
     public interface IObject2DRepository

@@ -1,8 +1,8 @@
 ﻿using System.Data;
 using Dapper;
 using Microsoft.Data.SqlClient;
-using MijnWebApi.WebApi.Classes;
 using MijnWebApi.WebApi.Classes.Interfaces;
+using MijnWebApi.WebApi.Classes.Models;
 
 public class Environment2DRepository : IEnvironment2DRepository
 {

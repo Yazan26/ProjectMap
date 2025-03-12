@@ -1,11 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using MijnWebApi.WebApi.Classes;
 using MijnWebApi.WebApi.Classes.Interfaces;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Logging;
+using MijnWebApi.WebApi.Classes.Models;
 
 
 [ApiController]

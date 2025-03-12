@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
 
-namespace MijnWebApi.WebApi.Classes
+namespace MijnWebApi.WebApi.Classes.Models
 {
     public class Environment2D
     {

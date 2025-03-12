@@ -1,4 +1,4 @@
-﻿using MijnWebApi.WebApi.Classes;
+﻿using MijnWebApi.WebApi.Classes.Models;
 
 namespace MijnWebApi.WebApi.Classes.Interfaces
 {

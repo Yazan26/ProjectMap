@@ -1,13 +1,13 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace MijnWebApi.WebApi.Classes
+namespace MijnWebApi.WebApi.Classes.Models
 {
     public class Object2D
     {
         public Guid Id { get; set; }
 
         [Required]
-        public String PrefabId { get; set; }
+        public string PrefabId { get; set; }
 
         [Required]
         public int PositionX { get; set; }

@@ -1,14 +1,8 @@
 ﻿using Microsoft.Data.SqlClient;
 using System.Data;
-using Microsoft.Extensions.Logging;
-using Dapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.OpenApi.Models;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
 using System.Security.Claims;
 using MijnWebApi.WebApi.Classes.Interfaces;
 using MijnWebApi.WebApi.Classes.Services;
@@ -180,9 +174,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseAuthentication(); // ✅ JWT Authenticatie wordt nu gebruikt
+app.UseAuthentication(); // ✅ Authenticatie wordt nu gebruikt
 app.UseAuthorization();
-app.UseCors("AllowAllOrigins"); // ✅ CORS blijft ongewijzigd
+app.UseCors("AllowAllOrigins"); // ✅ CORS 
 app.MapControllers();
 
 // Map Identity API endpoints under the 'account' prefix

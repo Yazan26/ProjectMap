@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
 using MijnWebApi.WebApi.Classes.Interfaces;
-using MijnWebApi.WebApi.Classes;
 using Newtonsoft.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Authorization;
+using MijnWebApi.WebApi.Classes.Models;
 
 
 [ApiController]
@@ -103,6 +103,18 @@ public class Environment2DController : ControllerBase
         await _environment2DRepository.DeleteWorldAsync(id);
         return NoContent();
     }
+
+    [HttpGet("world/{id:guid}")]
+    public async Task<ActionResult<Environment2D>> GetSingleWorld(Guid id)
+    {
+        var world = await _environment2DRepository.GetWorldByIdAsync(id);
+        if (world == null)
+        {
+            return NotFound($"❌ No world found with ID: {id}");
+        }
+        return Ok(world);
+    }
+
 
 
     [HttpGet("objects/{WorldId}")]
