@@ -15,5 +15,7 @@ namespace MijnWebApi.WebApi.Classes.Interfaces
 
         Task<IEnumerable<Object2D>> GetObjectsForEnvironment(Guid environmentId);
 
+        Task<bool> DeleteObject2DAsync(Guid id, string userId); // ✅ Ensure only the owner can delete
     }
 }
+

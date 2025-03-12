@@ -7,74 +7,41 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Logging;
 using MijnWebApi.WebApi.Classes.Models;
 
-
 [ApiController]
 [Route("[controller]")]
 public class Object2DController : ControllerBase
 {
     private readonly IObject2DRepository _Object2DRepository;
+    private readonly IAuthenticationService _authenticationService; // ✅ New Authentication Service
     private readonly ILogger<Object2DController> _logger;
 
-    public Object2DController(IObject2DRepository Object2DRepository, ILogger<Object2DController> logger)
+    public Object2DController(
+        IObject2DRepository Object2DRepository,
+        IAuthenticationService authenticationService, // ✅ Inject Authentication Service
+        ILogger<Object2DController> logger)
     {
         _Object2DRepository = Object2DRepository;
+        _authenticationService = authenticationService; // ✅ Save Auth Service
         _logger = logger;
     }
 
-    [HttpGet]
-    public async Task<IEnumerable<Object2D>> Get()
-    {
-        _logger.LogInformation("Fetching all game objects.");
-        return await _Object2DRepository.GetAllObject2DsAsync();
-    }
-
-    [HttpGet("{id:guid}")]
+    [HttpGet("user/world/{worldId}")]
     [Authorize]
-    public async Task<ActionResult<Object2D>> GetById(Guid id)
+    public async Task<ActionResult<IEnumerable<Object2D>>> GetObjectsForUserWorld(Guid worldId)
     {
-        _logger.LogInformation($"Fetching game object with ID: {id}");
-        var Object2D = await _Object2DRepository.GetObject2DByIdAsync(id);
-        if (Object2D == null)
+        var userId = _authenticationService.GetCurrentAuthenticatedUserId(); // ✅ Fetch Current User ID
+        if (string.IsNullOrEmpty(userId))
         {
-            _logger.LogWarning($"Game object with ID {id} not found.");
-            return NotFound();
-        }
-        return Ok(Object2D);
-    }
-
-    [HttpGet]
-    [Authorize]
-    public async Task<ActionResult<IEnumerable<Object2D>>> GetObjectsByEnvironment([FromQuery] Guid environmentId)
-    {
-        if (environmentId == Guid.Empty)
-        {
-            return BadRequest("Environment ID is missing.");
+            return Unauthorized("User not authenticated.");
         }
 
-        var objects = await _Object2DRepository.GetObjectsForEnvironment(environmentId);
-
-        if (objects == null || !objects.Any())
-        {
-            return NotFound("No objects found for this environment.");
-        }
-
-        return Ok(objects);
-    }
-
-
-    [HttpGet("user/{userId}/world/{worldId}")]
-    [Authorize]
-    public async Task<ActionResult<IEnumerable<Object2D>>> GetObjectsForUserWorld(Guid userId, Guid worldId)
-    {
-        if (userId == Guid.Empty || worldId == Guid.Empty)
-        {
-            return BadRequest("Invalid user or world ID.");
-        }
+        _logger.LogInformation($"📡 Fetching objects for UserID: {userId} in WorldID: {worldId}");
 
         var objects = await _Object2DRepository.GetObjectsForUserWorld(userId, worldId);
 
         if (objects == null || !objects.Any())
         {
+            _logger.LogWarning($"⚠️ No objects found for UserID: {userId} in WorldID: {worldId}");
             return NotFound("No objects found for this user in the selected world.");
         }
 
@@ -91,34 +58,39 @@ public class Object2DController : ControllerBase
             return BadRequest("Invalid game object data.");
         }
 
-        Object2D.Id = Object2D.Id == Guid.Empty ? Guid.NewGuid() : Object2D.Id;
-        _logger.LogInformation($"Creating game object with ID: {Object2D.Id}");
-
-        await _Object2DRepository.AddObject2DAsync(Object2D);
-        return CreatedAtAction(nameof(GetById), new { id = Object2D.Id }, Object2D);
-    }
-
-    [HttpPut("{id:guid}")]
-    [Authorize]
-    public async Task<IActionResult> Update(Guid id, [FromBody] Object2D Object2D)
-    {
-        if (Object2D == null || id != Object2D.Id)
+        var userId = _authenticationService.GetCurrentAuthenticatedUserId(); // ✅ Ensure User is Authenticated
+        if (string.IsNullOrEmpty(userId))
         {
-            _logger.LogWarning("Game object ID mismatch or invalid data provided.");
-            return BadRequest("Invalid game object data.");
+            return Unauthorized("User not authenticated.");
         }
 
-        _logger.LogInformation($"Updating game object with ID: {id}");
-        await _Object2DRepository.UpdateObject2DAsync(Object2D);
-        return NoContent();
+        Object2D.Id = Object2D.Id == Guid.Empty ? Guid.NewGuid() : Object2D.Id;
+        _logger.LogInformation($"📡 Creating game object with ID: {Object2D.Id} for UserID: {userId}");
+
+        await _Object2DRepository.AddObject2DAsync(Object2D);
+        return CreatedAtAction(nameof(GetObjectsForUserWorld), new { worldId = Object2D.Environment2DID }, Object2D);
     }
 
-    [HttpDelete("{id:guid}")]
+    [HttpDelete("{id}")]
     [Authorize]
-    public async Task<IActionResult> Delete(Guid id)
+    public async Task<IActionResult> DeleteObject2D(Guid id)
     {
-        _logger.LogInformation($"Deleting game object with ID: {id}");
-        await _Object2DRepository.DeleteObject2DAsync(id);
-        return NoContent();
+        var userId = _authenticationService.GetCurrentAuthenticatedUserId(); // ✅ Get User ID
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Unauthorized("User not authenticated.");
+        }
+
+        _logger.LogInformation($"🗑️ Deleting Object {id} for User {userId}");
+
+        var deleted = await _Object2DRepository.DeleteObject2DAsync(id, userId);
+        if (deleted)
+        {
+            return NoContent();
+        }
+        else
+        {
+            return NotFound("Object not found or you don't have permission to delete it.");
+        }
     }
 }
