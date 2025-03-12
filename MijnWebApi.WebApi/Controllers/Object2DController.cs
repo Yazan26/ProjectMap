@@ -29,29 +29,34 @@ public class Object2DController : ControllerBase
     [Authorize]
     public async Task<ActionResult<IEnumerable<Object2D>>> GetObjectsForUserWorld(Guid worldId)
     {
-        var userIdString = _authenticationService.GetCurrentAuthenticatedUserId();
-        if (string.IsNullOrEmpty(userIdString))
+        try
         {
-            return Unauthorized("User not authenticated.");
-        }
+            var userIdString = _authenticationService.GetCurrentAuthenticatedUserId();
+            if (string.IsNullOrEmpty(userIdString))
+            {
+                return Unauthorized("User not authenticated.");
+            }
 
-        if (!Guid.TryParse(userIdString, out Guid userId))
+            if (!Guid.TryParse(userIdString, out Guid userId))
+            {
+                return BadRequest("Invalid user ID.");
+            }
+
+            var objects = await _Object2DRepository.GetObjectsForUserWorld(userId, worldId);
+
+            if (objects == null || !objects.Any())
+            {
+                return NotFound("No objects found for this user in the selected world.");
+            }
+
+            return Ok(objects);
+        }
+        catch (Exception ex)
         {
-            return BadRequest("Invalid user ID.");
+            return StatusCode(500, $"Internal Server Error: {ex.Message}");
         }
-
-        _logger.LogInformation($"📡 Fetching objects for UserID: {userId} in WorldID: {worldId}");
-
-        var objects = await _Object2DRepository.GetObjectsForUserWorld(userId, worldId);
-
-        if (objects == null || !objects.Any())
-        {
-            _logger.LogWarning($"⚠️ No objects found for UserID: {userId} in WorldID: {worldId}");
-            return NotFound("No objects found for this user in the selected world.");
-        }
-
-        return Ok(objects);
     }
+
 
 
     [HttpPost]

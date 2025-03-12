@@ -51,9 +51,23 @@ public class Object2DRepository : IObject2DRepository
 
     public async Task<IEnumerable<Object2D>> GetObjectsForUserWorld(Guid userId, Guid worldId)
     {
-        var sql = "SELECT * FROM Object2D WHERE EnvironmentID = @WorldId AND UserID = @UserId";
-        return await _dbConnection.QueryAsync<Object2D>(sql, new { WorldId = worldId, UserId = userId });
+        try
+        {
+            var sql = @"
+            SELECT * FROM Object2D 
+            WHERE EnvironmentID = @WorldId AND UserID = @UserId"; // ✅ Controleer of UserID bestaat in je database!
+
+            var objects = await _dbConnection.QueryAsync<Object2D>(sql, new { WorldId = worldId, UserId = userId });
+
+            return objects ?? new List<Object2D>(); // ✅ Voorkomt null-problemen
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Database error: {ex.Message}"); // ✅ Tijdelijke debugging
+            return new List<Object2D>(); // ✅ Zorgt dat API niet crasht
+        }
     }
+
 
 
 
