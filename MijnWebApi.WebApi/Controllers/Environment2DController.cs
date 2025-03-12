@@ -43,6 +43,27 @@ public class Environment2DController : ControllerBase
         return Ok(world);
     }
 
+    [HttpGet("user/{userId:guid}")]
+    [Authorize]
+    public async Task<ActionResult<IEnumerable<Environment2D>>> GetUserWorlds(Guid userId)
+    {
+        if (userId == Guid.Empty)
+        {
+            return BadRequest("Invalid user ID.");
+        }
+
+        var userWorlds = await _environment2DRepository.GetWorldsByUserIdAsync(userId);
+
+        if (userWorlds == null || !userWorlds.Any())
+        {
+            return NotFound("No worlds found for this user.");
+        }
+
+        return Ok(userWorlds);
+    }
+
+
+
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] Environment2D environment2D)
     {

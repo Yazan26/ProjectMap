@@ -36,5 +36,8 @@ namespace MijnWebApi.WebApi.Classes.Interfaces
 
         Task<IEnumerable<Object2D>> GetObjectsForWorld(Guid WorldID);
 
+        Task<IEnumerable<Environment2D>> GetWorldsByUserIdAsync(Guid userId);
+
+
     }
 }

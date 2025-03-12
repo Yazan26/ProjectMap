@@ -1,6 +1,5 @@
 ﻿using System.Data;
 using Dapper;
-using Microsoft.Data.SqlClient;
 using MijnWebApi.WebApi.Classes.Interfaces;
 using MijnWebApi.WebApi.Classes.Models;
 
@@ -34,6 +33,14 @@ public class Environment2DRepository : IEnvironment2DRepository
             throw;
         }
     }
+
+    public async Task<IEnumerable<Environment2D>> GetWorldsByUserIdAsync(Guid userId)
+    {
+        var sql = "SELECT * FROM Environment2D WHERE OwnerUserID = @UserId";
+        return await _dbConnection.QueryAsync<Environment2D>(sql, new { UserId = userId });
+    }
+
+
 
     public async Task<Environment2D?> GetWorldByIdAsync(Guid id)
     {
