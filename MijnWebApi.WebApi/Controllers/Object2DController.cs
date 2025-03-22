@@ -25,6 +25,14 @@ public class Object2DController : ControllerBase
         _logger = logger;
     }
 
+    /// <summary>
+    /// Gets all Object2D records for a specific user and world.
+    /// </summary>
+    /// <param name="worldId">The ID of the world.</param>
+    /// <returns>A list of Object2D records for the user in the specified world.</returns>
+    /// <remarks>
+    /// Route: GET /Object2D/user/world/{worldId}
+    /// </remarks>
     [HttpGet("user/world/{worldId}")]
     [Authorize]
     public async Task<ActionResult<IEnumerable<Object2D>>> GetObjectsForUserWorld(Guid worldId)
@@ -57,8 +65,29 @@ public class Object2DController : ControllerBase
         }
     }
 
-
-
+    /// <summary>
+    /// Creates a new Object2D record.
+    /// </summary>
+    /// <param name="Object2D">The Object2D record to create.</param>
+    /// <returns>The created Object2D record.</returns>
+    /// <remarks>
+    /// Route: POST /Object2D
+    /// 
+    /// Sample request:
+    /// 
+    ///     POST /Object2D
+    ///     {
+    ///         "prefabId": "samplePrefab",
+    ///         "positionX": 10.0,
+    ///         "positionY": 20.0,
+    ///         "scaleX": 1.0,
+    ///         "scaleY": 1.0,
+    ///         "rotationZ": 0.0,
+    ///         "sortingLayer": 0,
+    ///         "environment2DID": "d290f1ee-6c54-4b01-90e6-d701748f0851",
+    ///         "userID": "d290f1ee-6c54-4b01-90e6-d701748f0851"
+    ///     }
+    /// </remarks>
     [HttpPost]
     [Authorize]
     public async Task<IActionResult> Create([FromBody] Object2D Object2D)
@@ -81,6 +110,15 @@ public class Object2DController : ControllerBase
         await _Object2DRepository.AddObject2DAsync(Object2D);
         return CreatedAtAction(nameof(GetObjectsForUserWorld), new { worldId = Object2D.Environment2DID }, Object2D);
     }
+
+    /// <summary>
+    /// Deletes an Object2D record by ID.
+    /// </summary>
+    /// <param name="id">The ID of the Object2D record to delete.</param>
+    /// <returns>No content.</returns>
+    /// <remarks>
+    /// Route: DELETE /Object2D/{id}
+    /// </remarks>
     [HttpDelete("{id}")]
     [Authorize]
     public async Task<IActionResult> DeleteObject2D(Guid id)
@@ -108,5 +146,4 @@ public class Object2DController : ControllerBase
             return NotFound("Object not found or you don't have permission to delete it.");
         }
     }
-
 }
