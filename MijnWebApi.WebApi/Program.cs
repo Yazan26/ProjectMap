@@ -192,7 +192,6 @@ app.MapGet("/", () => $"The API is up 🚀. Connection string found: {(sqlConnec
 //
 app.Use(async (context, next) =>
 {
-    Console.WriteLine($"📌 Incoming request: {context.Request.Method} {context.Request.Path}");
     await next();
 });
 
