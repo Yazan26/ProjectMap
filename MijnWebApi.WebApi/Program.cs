@@ -189,7 +189,7 @@ app.MapControllers()
 
 app.MapGet("/", () => $"The API is up 🚀. Connection string found: {(sqlConnectionStringFound ? "✅" : "❌ " +
     "DISCLAIMER: Dit is Yazans Persoonlijke WebAPI, als je de ZorgWebAPI nodig hebt zal je de github action even moeten rerunnen")}");
-
+//
 app.Use(async (context, next) =>
 {
     Console.WriteLine($"📌 Incoming request: {context.Request.Method} {context.Request.Path}");
