@@ -187,7 +187,8 @@ app.MapGroup("/account")
 app.MapControllers()
     .RequireAuthorization();
 
-app.MapGet("/", () => $"The API is up 🚀. Connection string found: {(sqlConnectionStringFound ? "✅" : "❌")}");
+app.MapGet("/", () => $"The API is up 🚀. Connection string found: {(sqlConnectionStringFound ? "✅" : "❌ " +
+    "DISCLAIMER: Dit is Yazans Persoonlijke WebAPI, als je de ZorgWebAPI nodig hebt zal je de github action even moeten rerunnen")}");
 
 app.Use(async (context, next) =>
 {
