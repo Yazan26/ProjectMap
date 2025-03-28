@@ -26,21 +26,6 @@ public class Environment2DController : ControllerBase
     }
 
     /// <summary>
-    /// Gets all Environment2D records for the current authenticated user.
-    /// </summary>
-    /// <returns>A list of Environment2D records.</returns>
-    /// <remarks>
-    /// Route: GET /Environment2D
-    /// </remarks>
-    [HttpGet(Name = "GetWorlds")]
-    public async Task<ActionResult<IEnumerable<Environment2D>>> Get()
-    {
-        Guid CurrentUser = Guid.Parse(_authenticationService.GetCurrentAuthenticatedUserId());
-        var Worlds = await _environment2DRepository.GetWorldsForUserAsync(CurrentUser);
-        return Ok(Worlds);
-    }
-
-    /// <summary>
     /// Gets an Environment2D record by ID.
     /// </summary>
     /// <param name="Environment2DId">The ID of the Environment2D record.</param>
@@ -58,6 +43,23 @@ public class Environment2DController : ControllerBase
         }
         return Ok(world);
     }
+
+    /// <summary>
+    /// Gets all Environment2D records for the current authenticated user.
+    /// </summary>
+    /// <returns>A list of Environment2D records.</returns>
+    /// <remarks>
+    /// Route: GET /Environment2D
+    /// </remarks>
+    [HttpGet(Name = "GetWorlds")]
+    public async Task<ActionResult<IEnumerable<Environment2D>>> Get()
+    {
+        Guid CurrentUser = Guid.Parse(_authenticationService.GetCurrentAuthenticatedUserId());
+        var Worlds = await _environment2DRepository.GetWorldsForUserAsync(CurrentUser);
+        return Ok(Worlds);
+    }
+
+    
 
     /// <summary>
     /// Creates a new Environment2D record.
