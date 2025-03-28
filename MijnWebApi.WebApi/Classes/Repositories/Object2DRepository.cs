@@ -1,84 +1,66 @@
 ﻿using System.Data;
 using Dapper;
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Logging;
 using MijnWebApi.WebApi.Classes.Interfaces;
 using MijnWebApi.WebApi.Classes.Models;
 
 
 public class Object2DRepository : IObject2DRepository
 {
-    private readonly IDbConnection _dbConnection;
+    private readonly string _connectionString;
+    private readonly ILogger<Environment2DRepository> _logger;
 
-    public Object2DRepository(IDbConnection dbConnection)
+    public Object2DRepository(string sqlConnectionString, ILogger<Environment2DRepository> logger)
     {
-        _dbConnection = dbConnection;
+        _connectionString = sqlConnectionString;
+        _logger = logger;
     }
 
-    public async Task<IEnumerable<Object2D>> GetAllObject2DsAsync()
+    private SqlConnection CreateConnection()
     {
-        var sql = "SELECT * FROM Object2D";
-        return await _dbConnection.QueryAsync<Object2D>(sql);
+        return new SqlConnection(_connectionString);
     }
 
-    public async Task<Object2D> GetObject2DByIdAsync(Guid id)
+    public async Task<Object2D> PostObjectAsync(Object2D object2d)
     {
-        var sql = "SELECT * FROM Object2D WHERE Id = @Id";
-        return await _dbConnection.QueryFirstOrDefaultAsync<Object2D>(sql, new { Id = id });
-    }
-
-    public async Task AddObject2DAsync(Object2D object2D)
-    {
-        var sql = @"INSERT INTO Object2D 
-                (Id, PrefabId, PositionX, PositionY, ScaleX, ScaleY, RotationZ, SortingLayer, Environment2DID, UserID) 
-                VALUES 
-                (@Id, @PrefabId, @PositionX, @PositionY, @ScaleX, @ScaleY, @RotationZ, @SortingLayer, @Environment2DID, @UserID)";
-        await _dbConnection.ExecuteAsync(sql, object2D);
-
-    }
-
-    public async Task UpdateObject2DAsync(Object2D object2D)
-    {
-        var sql = @"UPDATE Object2D 
-                        SET PrefabId = @PrefabId, PositionX = @PositionX, PositionY = @PositionY, ScaleX = @ScaleX, ScaleY = @ScaleY, RotationZ = @RotationZ, SortingLayer = @SortingLayer, Environment2DID = @Environment2DID 
-                        WHERE Id = @Id";
-        await _dbConnection.ExecuteAsync(sql, object2D);
-    }
-
-    public async Task<bool> DeleteObject2DAsync(Guid id, Guid userId)
-    {
-        var sql = "DELETE FROM Object2D WHERE Id = @Id AND UserID = @UserId";
-        int rowsAffected = await _dbConnection.ExecuteAsync(sql, new { Id = id, UserId = userId });
-        return rowsAffected > 0;
-    }
-
-
-    public async Task<IEnumerable<Object2D>> GetObjectsForUserWorld(Guid userId, Guid worldId)
-    {
-        try
+        using (var connection = CreateConnection())
         {
-            var sql = @"
-            SELECT * FROM Object2D 
-            WHERE EnvironmentID = @WorldId AND UserID = @UserId"; // ✅ Controleer of UserID bestaat in je database!
-
-            var objects = await _dbConnection.QueryAsync<Object2D>(sql, new { WorldId = worldId, UserId = userId });
-
-            return objects ?? new List<Object2D>(); // ✅ Voorkomt null-problemen
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"❌ Database error: {ex.Message}"); // ✅ Tijdelijke debugging
-            return new List<Object2D>(); // ✅ Zorgt dat API niet crasht
+            var sql = await connection.ExecuteAsync("INSERT INTO [Object2D] (Id, EnvironmentId, PrefabId, PositionX, PositionY, ScaleX, ScaleY, RotationZ, SortingLayer) VALUES (@Id, @EnvironmentId, @PrefabId, @PositionX, @PositionY. @ScaleX, @ScaleY, @RotationZ, @SortingLayer)", object2d);
+            return object2d;
         }
     }
 
-
-
-
-    public async Task<IEnumerable<Object2D>> GetObjectsForEnvironment(Guid environmentId)
+    public async Task<IEnumerable<Object2D>> GetObjectAsync(Guid id)
     {
-        var sql = "SELECT * FROM Object2D WHERE EnvironmentID = @EnvironmentId";
-        return await _dbConnection.QueryAsync<Object2D>(sql, new { EnvironmentId = environmentId });
+        using (var connection = CreateConnection())
+        {
+            return await connection.QueryAsync<Object2D>("SELECT * FROM [Object2D] WHERE EnvironmentId = @Id", new { id });
+        }
     }
 
+    public async Task<IEnumerable<Object2D>> GetAllObjectsAsync()
+    {
+        using (var connection = CreateConnection())
+        {
+            return await connection.QueryAsync<Object2D>("SELECT * FROM [Object2D]");
+        }
+    }
+
+    public async Task UpdateObjectAsync(Object2D object2D)
+    {
+        using (var connection = CreateConnection())
+        {
+           await connection.ExecuteAsync("UPDATE [Object2D] SET PositionX = @PositionX, PositionY = @PositionY WHERE Id = @Id", object2D);
+        }
+    }
+
+    public async Task DeleteObjectAsync(Guid id)
+    {
+        using (var connection = CreateConnection())
+        {
+            await connection.ExecuteAsync("UDELETE FROM [Object2D] WHERE Id = @Id", new { id });
+        }
+    }
 
 }
