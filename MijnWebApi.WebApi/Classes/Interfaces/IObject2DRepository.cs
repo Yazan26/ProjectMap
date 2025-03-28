@@ -5,11 +5,11 @@ namespace MijnWebApi.WebApi.Classes.Interfaces
 {
     public interface IObject2DRepository
     {
-        Task<IEnumerable<Object2D>> GetAllObject2DsAsync();
-        Task<Object2D?> GetObject2DByIdAsync(Guid id);
-        Task<IEnumerable<Object2D>> GetObjectsForUserWorld(Guid userId, Guid worldId);
-        Task AddObject2DAsync(Object2D Object2D);
-        Task<bool> DeleteObject2DAsync(Guid id, Guid userId);
+        public Task<Object2D> PostObjectAsync(Object2D Object2D);
+        public Task<IEnumerable<Object2D>> GetObjectAsync(Guid id);
+        public Task<IEnumerable<Object2D>> GetObjectAsync();
+        public Task UpdateObjectAsync(Object2D object2D);
+        public Task DeleteObjectAsync(Guid id);
     }
 }
 

@@ -5,16 +5,12 @@ namespace MijnWebApi.WebApi.Classes.Models
 {
     public class Environment2D
     {
-        [Key]
+        [Required]
         public Guid Id { get; set; } = Guid.NewGuid(); // ✅ Automatically generate a GUID
 
         [Required]
         public string Name { get; set; }
-
-        [Required]
         public int? MaxHeight { get; set; } // Y, Nullable
-
-        [Required]
         public int? MaxWidth { get; set; } // X, nullablle
 
         [Required]

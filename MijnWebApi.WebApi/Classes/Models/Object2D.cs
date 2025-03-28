@@ -7,6 +7,10 @@ namespace MijnWebApi.WebApi.Classes.Models
     {
         public Guid Id { get; set; }
 
+
+        [Required]
+        public Guid Environment2DID { get; set; }
+
         [Required]
         public string PrefabId { get; set; }
 
@@ -28,7 +32,7 @@ namespace MijnWebApi.WebApi.Classes.Models
         [Required]
         public float SortingLayer { get; set; }
 
-        public Guid? Environment2DID { get; set; } // Wereld ID (kan NULL zijn)
+      
 
         [Required]
         public Guid UserID { get; set; } // ✅ Nieuw veld toegevoegd!
