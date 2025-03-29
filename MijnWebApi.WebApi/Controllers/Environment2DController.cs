@@ -62,6 +62,35 @@ public class Environment2DController : ControllerBase
     
 
     /// <summary>
+    /// Updates an existing Environment2D record.
+    /// </summary>
+    /// <param name="Environment2DId">The ID of the Environment2D record to update.</param>
+    /// <param name="NewWorld">The updated Environment2D record.</param>
+    /// <returns>Action result.</returns>
+    /// <remarks>
+    /// Route: PUT /Environment2D/{Environment2DId}
+    /// Example JSON body:
+    /// {
+    ///     "Id": "guid",
+    ///     "Name": "Updated World",
+    ///     "MaxHeight": 200,
+    ///     "MaxWidth": 200,
+    ///     "OwnerUserID": "guid"
+    /// }
+    /// </remarks>
+    [HttpPut("{Environment2DId}", Name = "UpdateWorld")]
+    public async Task<ActionResult> Update(Guid Environment2DId, Environment2D NewWorld)
+    {
+        var ExistingWorld = await _environment2DRepository.GetWorldAsync(Environment2DId);
+        if (ExistingWorld == null)
+            return NotFound();
+
+        await _environment2DRepository.UpdateWorldAsync(NewWorld);
+        return Ok(NewWorld);
+    }
+
+
+    /// <summary>
     /// Creates a new Environment2D record.
     /// </summary>
     /// <param name="World">The Environment2D record to create.</param>
@@ -100,34 +129,6 @@ public class Environment2DController : ControllerBase
             var CreatedWorld = await _environment2DRepository.PostWorldAsync(World);
             return Ok();
         }
-    }
-
-    /// <summary>
-    /// Updates an existing Environment2D record.
-    /// </summary>
-    /// <param name="Environment2DId">The ID of the Environment2D record to update.</param>
-    /// <param name="NewWorld">The updated Environment2D record.</param>
-    /// <returns>Action result.</returns>
-    /// <remarks>
-    /// Route: PUT /Environment2D/{Environment2DId}
-    /// Example JSON body:
-    /// {
-    ///     "Id": "guid",
-    ///     "Name": "Updated World",
-    ///     "MaxHeight": 200,
-    ///     "MaxWidth": 200,
-    ///     "OwnerUserID": "guid"
-    /// }
-    /// </remarks>
-    [HttpPut("{Environment2DId}", Name = "UpdateWorld")]
-    public async Task<ActionResult> Update(Guid Environment2DId, Environment2D NewWorld)
-    {
-        var ExistingWorld = await _environment2DRepository.GetWorldAsync(Environment2DId);
-        if (ExistingWorld == null)
-            return NotFound();
-
-        await _environment2DRepository.UpdateWorldAsync(NewWorld);
-        return Ok(NewWorld);
     }
 
     /// <summary>
