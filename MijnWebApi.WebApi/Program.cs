@@ -99,7 +99,7 @@ app.UseSwaggerUI();
 app.UseHttpsRedirection();
 
 // Health check endpoint
-app.MapGet("/", () => $"The ZorgAppWebAPI is up. Connection string found: {(sqlConnectionStringFound ? "Yes" : "No")}");
+app.MapGet("/", () => $"Yazans project WebAPI is up. Connection string found: {(sqlConnectionStringFound ? "Yes" : "No")}");
 
 
 
