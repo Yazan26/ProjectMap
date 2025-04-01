@@ -115,7 +115,7 @@ public class Environment2DController : ControllerBase
             if (NameTest.Name == World.Name)
             {
                 NameExists = true;
-                return BadRequest();
+                return BadRequest("name already exists");
             }
         }
         if (worlds.Count() >= 6 || NameExists)
@@ -127,7 +127,7 @@ public class Environment2DController : ControllerBase
             World.Id = Guid.NewGuid();
             World.OwnerUserID = CurrentUser;
             var CreatedWorld = await _environment2DRepository.PostWorldAsync(World);
-            return Ok();
+            return Ok("world created successfully");
         }
     }
 

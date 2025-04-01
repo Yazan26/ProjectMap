@@ -9,12 +9,25 @@ using System.Data;
 using Microsoft.AspNetCore.DataProtection;
 using System.IO;
 using MijnWebApi.WebApi.Classes.Services;
+using MijnWebApi.WebApi.Classes.Interfaces;
+using MijnWebApi.WebApi.Classes.Models;
+using MijnWebApi.WebApi.Classes.Repository;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
 //connection string
 var sqlConnectionString = builder.Configuration.GetValue<string>("connectionstring");
 var sqlConnectionStringFound = !string.IsNullOrWhiteSpace(sqlConnectionString);
+// Configure logging
+var loggerFactory = LoggerFactory.Create(loggingBuilder =>
+{
+    loggingBuilder.AddConsole();
+    loggingBuilder.AddDebug();
+    loggingBuilder.AddConfiguration(builder.Configuration.GetSection("Logging"));
+});
+var logger = loggerFactory.CreateLogger<Program>();
 // Add services to the container.
 
 builder.Services.AddControllers();
@@ -29,6 +42,12 @@ builder.Services.AddTransient<IAuthenticationService, AspNetIdentityAuthenticati
 builder.Services.AddTransient<IDbConnection>(sp => new SqlConnection(sqlConnectionString));
 builder.Services.AddTransient<IAuthenticationService, AspNetIdentityAuthenticationService>();
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IEnvironment2DRepository>(provider =>
+    new Environment2DRepository(sqlConnectionString));
+
+builder.Services.AddScoped<IObject2DRepository>(provider =>
+    new Object2DRepository(sqlConnectionString));
+
 
 // Configure authorization
 builder.Services.AddAuthorization();
