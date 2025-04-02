@@ -30,7 +30,11 @@ var loggerFactory = LoggerFactory.Create(loggingBuilder =>
 var logger = loggerFactory.CreateLogger<Program>();
 // Add services to the container.
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNamingPolicy = null; // PascalCase
+    });
 
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
