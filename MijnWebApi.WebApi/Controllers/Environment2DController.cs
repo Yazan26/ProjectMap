@@ -39,7 +39,7 @@ public class Environment2DController : ControllerBase
         var world = await _environment2DRepository.GetWorldAsync(Environment2DId);
         if (world == null)
         {
-            return NotFound();
+            return NotFound("geen wereld gevonden met dit ID, maak snel nieuwe!");
         }
         return Ok(world);
     }
@@ -56,6 +56,10 @@ public class Environment2DController : ControllerBase
     {
         Guid CurrentUser = Guid.Parse(_authenticationService.GetCurrentAuthenticatedUserId());
         var Worlds = await _environment2DRepository.GetWorldsForUserAsync(CurrentUser);
+        if (Worlds == null)
+        {
+            return NotFound("geen werelden gevonden, maak snel nieuwe!");
+        }
         return Ok(Worlds);
     }
 
@@ -83,9 +87,10 @@ public class Environment2DController : ControllerBase
     {
         var ExistingWorld = await _environment2DRepository.GetWorldAsync(Environment2DId);
         if (ExistingWorld == null)
-            return NotFound();
+            return NotFound("wereld niet gevonden");
 
         await _environment2DRepository.UpdateWorldAsync(NewWorld);
+
         return Ok(NewWorld);
     }
 
@@ -118,9 +123,13 @@ public class Environment2DController : ControllerBase
                 return BadRequest("name already exists");
             }
         }
-        if (worlds.Count() >= 6 || NameExists)
+        if (worlds.Count() >= 6)
         {
-            return BadRequest();
+            return BadRequest("je hebt meer dan 6 werelden! verwijder 1");
+        }
+        else if (NameExists == true)
+        {
+            return BadRequest("name already exists");
         }
         else
         {
@@ -144,9 +153,9 @@ public class Environment2DController : ControllerBase
     {
         var ExistingWorld = await _environment2DRepository.GetWorldAsync(WorldId);
         if (ExistingWorld == null)
-            return NotFound();
+            return NotFound("invalid world id!");
 
         await _environment2DRepository.DeleteWorldAsync(WorldId);
-        return Ok();
+        return Ok("world deleted");
     }
 }
