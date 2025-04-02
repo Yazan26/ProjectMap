@@ -148,14 +148,18 @@ public class Environment2DController : ControllerBase
     /// <remarks>
     /// Route: DELETE /Environment2D/{WorldId}
     /// </remarks>
-    [HttpDelete("{Environment2DId}", Name = "DeleteWorld")]
+    [HttpDelete("{WorldId}", Name = "DeleteWorld")]
     public async Task<ActionResult> Delete(Guid WorldId)
     {
-        //var ExistingWorld = await _environment2DRepository.GetWorldAsync(WorldId);
-        //if (ExistingWorld == null)
-        //    return NotFound("invalid world id!");
-
-        await _environment2DRepository.DeleteWorldAsync(WorldId);
-        return Ok("world deleted");
+        var ExistingWorld = await _environment2DRepository.GetWorldAsync(WorldId);
+        if (ExistingWorld == null)
+        {
+            return NotFound("invalid world id!");
+        }
+        else 
+        { 
+            await _environment2DRepository.DeleteWorldAsync(WorldId);
+            return Ok("world deleted");
+        }
     }
 }
