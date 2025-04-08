@@ -61,7 +61,7 @@ namespace MijnWebApi.WebApi.Classes.Repository
         {
             using (var connection = CreateConnection())
             {
-                await connection.ExecuteAsync("UDELETE FROM [Object2D] WHERE Id = @Id", new { id });
+                await connection.ExecuteAsync("DELETE FROM [Object2D] WHERE Id = @Id", new { id });
             }
         }
 
