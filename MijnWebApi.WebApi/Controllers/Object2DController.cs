@@ -13,16 +13,16 @@ using MijnWebApi.WebApi.Classes.Models;
 public class Object2DController : ControllerBase
 {
     private readonly IObject2DRepository _Object2DRepository;
-    private readonly IAuthenticationService _authenticationService; // ✅ New Authentication Service
+    private readonly IAuthenticationService _authenticationService;
     private readonly ILogger<Object2DController> _logger;
 
     public Object2DController(
         IObject2DRepository Object2DRepository,
-        IAuthenticationService authenticationService, // ✅ Inject Authentication Service
+        IAuthenticationService authenticationService,
         ILogger<Object2DController> logger)
     {
         _Object2DRepository = Object2DRepository;
-        _authenticationService = authenticationService; // ✅ Save Auth Service
+        _authenticationService = authenticationService;
         _logger = logger;
     }
 
@@ -40,6 +40,14 @@ public class Object2DController : ControllerBase
         return Ok(Objects);
     }
 
+    /// <summary>
+    /// Gets Object2D records by Environment2DId.
+    /// </summary>
+    /// <param name="Environment2DId">The ID of the Environment2D.</param>
+    /// <returns>A list of Object2D records.</returns>
+    /// <remarks>
+    /// Route: GET /Object2D/{Environment2DId}
+    /// </remarks>
     [HttpGet("{Environment2DId}", Name = "GetObjectWorld")]
     public async Task<ActionResult<IEnumerable<Object2D>>> Get(Guid Environment2DId)
     {

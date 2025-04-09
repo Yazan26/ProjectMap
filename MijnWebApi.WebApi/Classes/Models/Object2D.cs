@@ -31,10 +31,6 @@ namespace MijnWebApi.WebApi.Classes.Models
 
         [Required]
         public float SortingLayer { get; set; }
-
-      
-
-        [Required]
         public Guid UserID { get; set; } // ✅ Nieuw veld toegevoegd!
     }
 }
