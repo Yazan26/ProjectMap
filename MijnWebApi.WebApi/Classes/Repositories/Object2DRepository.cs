@@ -29,21 +29,25 @@ namespace MijnWebApi.WebApi.Classes.Repository
             using (var connection = CreateConnection())
             {
                 var sql = @"INSERT INTO [Object2D] 
-(Id, EnvironmentId, PrefabId, PositionX, PositionY, ScaleX, ScaleY, RotationZ, SortingLayer, UserId)
+(Id, Environment2DID, PrefabId, PositionX, PositionY, ScaleX, ScaleY, RotationZ, SortingLayer, UserID)
 VALUES 
 (@Id, @Environment2DID, @PrefabId, @PositionX, @PositionY, @ScaleX, @ScaleY, @RotationZ, @SortingLayer, @UserID)";
 
+                await connection.ExecuteAsync(sql, object2d);
                 return object2d;
             }
         }
+
 
         public async Task<IEnumerable<Object2D>> GetObjectAsync(Guid id)
         {
             using (var connection = CreateConnection())
             {
-                return await connection.QueryAsync<Object2D>("SELECT * FROM [Object2D] WHERE EnvironmentId = @Id", new { id });
+                return await connection.QueryAsync<Object2D>(
+                    "SELECT * FROM [Object2D] WHERE Environment2DID = @id", new { id });
             }
         }
+
 
         public async Task<IEnumerable<Object2D>> GetAllObjectsAsync()
         {
