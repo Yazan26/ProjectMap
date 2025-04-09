@@ -143,22 +143,22 @@ public class Environment2DController : ControllerBase
     /// <summary>
     /// Deletes an Environment2D record by ID.
     /// </summary>
-    /// <param name="WorldId">The ID of the Environment2D record to delete.</param>
+    /// <param name="Environment2DId">The ID of the Environment2D record to delete.</param>
     /// <returns>Action result.</returns>
     /// <remarks>
-    /// Route: DELETE /Environment2D/{WorldId}
+    /// Route: DELETE /Environment2D/{Environment2DId}
     /// </remarks>
-    [HttpDelete("{WorldId}", Name = "DeleteWorld")]
-    public async Task<ActionResult> Delete(Guid WorldId)
+    [HttpDelete("{Environment2DId}", Name = "DeleteWorld")]
+    public async Task<ActionResult> Delete(Guid Environment2DId)
     {
-        var ExistingWorld = await _environment2DRepository.GetWorldAsync(WorldId);
+        var ExistingWorld = await _environment2DRepository.GetWorldAsync(Environment2DId);
         if (ExistingWorld == null)
         {
             return NotFound("invalid world id!");
         }
         else 
         { 
-            await _environment2DRepository.DeleteWorldAsync(WorldId);
+            await _environment2DRepository.DeleteWorldAsync(Environment2DId);
             return Ok("world deleted");
         }
     }

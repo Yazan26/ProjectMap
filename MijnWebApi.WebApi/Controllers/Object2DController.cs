@@ -40,6 +40,16 @@ public class Object2DController : ControllerBase
         return Ok(Objects);
     }
 
+    [HttpGet("{Environment2DId}", Name = "GetObjectWorld")]
+    public async Task<ActionResult<IEnumerable<Object2D>>> Get(Guid Environment2DId)
+    {
+        var Object2D = await _Object2DRepository.GetObjectAsync(Environment2DId);
+        if (Object2D == null)
+            return NotFound();
+
+        return Ok(Object2D);
+    }
+
     /// <summary>
     /// Creates a new Object2D record.
     /// </summary>
