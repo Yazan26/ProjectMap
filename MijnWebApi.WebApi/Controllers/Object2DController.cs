@@ -134,7 +134,6 @@ public class Object2DController : ControllerBase
     ///         "rotationZ": 45.0,
     ///         "sortingLayer": 1,
     ///         "environment2DID": "d290f1ee-6c54-4b01-90e6-d701748f0851",
-    ///         "userID": "d290f1ee-6c54-4b01-90e6-d701748f0851"
     ///     }
     /// </remarks>
     [HttpPut("{ObjectId}", Name = "UpdateObject2D")]
