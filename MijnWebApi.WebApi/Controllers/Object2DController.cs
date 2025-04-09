@@ -84,6 +84,8 @@ public class Object2DController : ControllerBase
     [HttpPost(Name = "CreateObject")]
     public async Task<ActionResult> Add(Object2D Object)
     {
+       Guid CurrentUser = Guid.Parse(_authenticationService.GetCurrentAuthenticatedUserId());
+        Object.UserID = CurrentUser; // Set the UserID to the current authenticated user
         Object.Id = Guid.NewGuid();
         var createdObject = await _Object2DRepository.PostObjectAsync(Object);
         return Ok(createdObject);
