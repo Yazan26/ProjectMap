@@ -28,7 +28,11 @@ namespace MijnWebApi.WebApi.Classes.Repository
         {
             using (var connection = CreateConnection())
             {
-                var sql = await connection.ExecuteAsync("INSERT INTO [Object2D] (Id, EnvironmentId, PrefabId, PositionX, PositionY, ScaleX, ScaleY, RotationZ, SortingLayer) VALUES (@Id, @EnvironmentId, @PrefabId, @PositionX, @PositionY. @ScaleX, @ScaleY, @RotationZ, @SortingLayer)", object2d);
+                var sql = @"INSERT INTO [Object2D] 
+(Id, EnvironmentId, PrefabId, PositionX, PositionY, ScaleX, ScaleY, RotationZ, SortingLayer, UserId)
+VALUES 
+(@Id, @Environment2DID, @PrefabId, @PositionX, @PositionY, @ScaleX, @ScaleY, @RotationZ, @SortingLayer, @UserID)";
+
                 return object2d;
             }
         }
