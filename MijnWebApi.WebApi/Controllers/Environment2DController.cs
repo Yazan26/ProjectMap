@@ -123,9 +123,9 @@ public class Environment2DController : ControllerBase
                 return BadRequest("name already exists");
             }
         }
-        if (worlds.Count() >= 6)
+        if (worlds.Count() >= 5)
         {
-            return BadRequest("je hebt meer dan 6 werelden! verwijder 1");
+            return BadRequest("je hebt meer dan 5 werelden! verwijder 1");
         }
         else if (NameExists == true)
         {
