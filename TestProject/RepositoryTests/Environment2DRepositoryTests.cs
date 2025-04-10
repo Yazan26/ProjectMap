@@ -38,7 +38,7 @@ namespace TestProject.Repositories
             };
 
             _mockConnection
-                .Setup(conn => conn.ExecuteAsync(It.IsAny<string>(), environment2D, null, null, null))
+                .Setup(conn => conn.ExecuteAsync(It.IsAny<string>(), environment2D, It.IsAny<IDbTransaction>(), It.IsAny<int?>(), It.IsAny<CommandType?>()))
                 .ReturnsAsync(1);
 
             // Act
@@ -64,7 +64,7 @@ namespace TestProject.Repositories
 
             _mockConnection
                 .Setup(conn => conn.QuerySingleOrDefaultAsync<Environment2D>(
-                    "SELECT * FROM [Environment2D] WHERE Id = @Id", new { Id = id }, null, null))
+                    It.IsAny<string>(), It.IsAny<object>(), It.IsAny<IDbTransaction>(), It.IsAny<int?>(), It.IsAny<CommandType?>()))
                 .ReturnsAsync(expectedEnvironment);
 
             // Act
@@ -101,7 +101,7 @@ namespace TestProject.Repositories
 
             _mockConnection
                 .Setup(conn => conn.QueryAsync<Environment2D>(
-                    "SELECT * FROM [Environment2D] WHERE OwnerUserID = @id", new { id = userId }, null, null, null))
+                    It.IsAny<string>(), It.IsAny<object>(), It.IsAny<IDbTransaction>(), It.IsAny<int?>(), It.IsAny<CommandType?>()))
                 .ReturnsAsync(expectedEnvironments);
 
             // Act
@@ -137,7 +137,7 @@ namespace TestProject.Repositories
 
             _mockConnection
                 .Setup(conn => conn.QueryAsync<Environment2D>(
-                    "SELECT * FROM [Environment2D]", null, null, null, null))
+                    It.IsAny<string>(), It.IsAny<object>(), It.IsAny<IDbTransaction>(), It.IsAny<int?>(), It.IsAny<CommandType?>()))
                 .ReturnsAsync(expectedEnvironments);
 
             // Act
@@ -162,15 +162,14 @@ namespace TestProject.Repositories
 
             _mockConnection
                 .Setup(conn => conn.ExecuteAsync(
-                    "UPDATE [Environment2D] SET Name = @Name, MaxHeight = @MaxHeight, MaxWidth = @MaxWidth WHERE Id = @Id",
-                    environment2D, null, null, null))
+                    It.IsAny<string>(), environment2D, It.IsAny<IDbTransaction>(), It.IsAny<int?>(), It.IsAny<CommandType?>()))
                 .ReturnsAsync(1);
 
             // Act
             await _repository.UpdateWorldAsync(environment2D);
 
             // Assert
-            _mockConnection.Verify(conn => conn.ExecuteAsync(It.IsAny<string>(), environment2D, null, null, null), Times.Once);
+            _mockConnection.Verify(conn => conn.ExecuteAsync(It.IsAny<string>(), environment2D, It.IsAny<IDbTransaction>(), It.IsAny<int?>(), It.IsAny<CommandType?>()), Times.Once);
         }
 
         [TestMethod]
@@ -180,18 +179,14 @@ namespace TestProject.Repositories
             var id = Guid.NewGuid();
 
             _mockConnection
-                .Setup(conn => conn.ExecuteAsync("DELETE FROM [Environment2D] WHERE Id = @Id", new { Id = id }, null, null, null))
-                .ReturnsAsync(1);
-
-            _mockConnection
-                .Setup(conn => conn.ExecuteAsync("DELETE FROM [Object2D] WHERE Environment2DID = @Id", new { Id = id }, null, null, null))
+                .Setup(conn => conn.ExecuteAsync(It.IsAny<string>(), It.IsAny<object>(), It.IsAny<IDbTransaction>(), It.IsAny<int?>(), It.IsAny<CommandType?>()))
                 .ReturnsAsync(1);
 
             // Act
             await _repository.DeleteWorldAsync(id);
 
             // Assert
-            _mockConnection.Verify(conn => conn.ExecuteAsync(It.IsAny<string>(), It.IsAny<object>(), null, null, null), Times.Exactly(2));
+            _mockConnection.Verify(conn => conn.ExecuteAsync(It.IsAny<string>(), It.IsAny<object>(), It.IsAny<IDbTransaction>(), It.IsAny<int?>(), It.IsAny<CommandType?>()), Times.Exactly(2));
         }
     }
 }
