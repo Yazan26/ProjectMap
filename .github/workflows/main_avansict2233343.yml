@@ -56,6 +56,9 @@ jobs:
       - name: Build with dotnet
         run: dotnet build --configuration Release
 
+      - name: Build test project
+        run: dotnet build ./TestProject/TestProject.csproj --configuration Debug
+
       - name: Run tests
         run: dotnet test ./TestProject/TestProject.csproj --no-build --verbosity normal
 
