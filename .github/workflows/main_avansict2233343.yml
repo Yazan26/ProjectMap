@@ -56,6 +56,9 @@ jobs:
       - name: Build with dotnet
         run: dotnet build --configuration Release
 
+      - name: Run tests
+        run: dotnet test ./TestProject/TestProject.csproj --no-build --verbosity normal
+
       - name: Clean publish directory
         run: |
           if (Test-Path -Path ${{runner.temp}}/${{env.PUBLISH_DIRECTORY}}) { Remove-Item -Recurse -Force ${{runner.temp}}/${{env.PUBLISH_DIRECTORY}} }
